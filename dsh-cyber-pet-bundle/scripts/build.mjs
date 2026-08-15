@@ -81,9 +81,10 @@ function dshCssModules() {
 }
 
 /**
- * Strip the TC39 @Remote('ask') decorator token from the pet-chat source at
- * parse time — Node's ESM loader cannot parse decorator syntax, and src/host.ts
- * re-applies the identical marker through the exported Remote factory.
+ * Strip every TC39 @Remote('<name>') decorator token from the pet-chat
+ * source at parse time — Node's ESM loader cannot parse decorator syntax,
+ * and src/host.ts re-applies the identical markers through the exported
+ * Remote factory.
  */
 function stripRemoteDecorator() {
   return {
@@ -91,7 +92,7 @@ function stripRemoteDecorator() {
     transform: {
       filter: { id: /pet-chat[\\/]src[\\/]index\.ts$/ },
       handler(code) {
-        return { code: code.replace(/@Remote\(\s*'ask'\s*\)\s*/g, ''), map: null }
+        return { code: code.replace(/@Remote\(\s*'[^']+'\s*\)\s*/g, ''), map: null }
       },
     },
   }

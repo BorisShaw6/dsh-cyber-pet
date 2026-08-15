@@ -8,7 +8,8 @@
  * the renderer binds as `usePetStats`. The inject face carries only the
  * settings mutation verbs plus the harness-chat probe. The tracker persists
  * lifetime counters and preferences to localStorage; the only wire touch is
- * the optional host-side petChat Remote probe for the harness chat backend.
+ * the optional host-side petChat Remote probe for the harness chat backend
+ * and the account-balance sync.
  */
 import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
 // Type-only: pulls the ui-layout SlotMap merge (the shell.overlay seat).
@@ -38,17 +39,37 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
 /** Dictionary namespace owned by this plugin. */
 const NS = 'pet'
 
-/** Required services: slots, sessions feed, copy, and the Remote namespace (the petChat probe). */
-export const inject = ['slots', 'sessions', 'locale', 'remote']
+/** Required services: slots, sessions feed, copy, and the web transport (the petChat probe). */
+export const inject = ['slots', 'sessions', 'locale', 'connection']
 
-/** The generated petChat Remote face this plugin probes for (absent deployments fall back). */
+/** Settled petChat outcome as it crosses the wire. */
+type PetChatWireResult<V> =
+  | { ok: true; value: V }
+  | { ok: false; error: { code: string; message: string } }
+
+/** The typed petChat face published by in-tree Remote assemblies (absent out-of-tree). */
 interface PetChatRemoteFace {
   ask(request: {
     provider: string
     model: string
     history: readonly { role: 'user' | 'assistant'; content: string }[]
-  }): Promise<{ ok: true; value: { reply: string } } | { ok: false; error: { code: string; message: string } }>
+  }): Promise<PetChatWireResult<{ reply: string }>>
+  balance?(request: Record<string, never>): Promise<
+    PetChatWireResult<{ availableBalance: number; totalBalance: number; currency: string }>
+  >
 }
+
+/** The web transport's RPC seam (one gateway channel: `/api`). */
+interface ConnectionRpcFace {
+  rpc: {
+    call(channel: string, endpoint: string, payload: unknown, signal?: AbortSignal): Promise<
+      { ok: true; value: unknown } | { ok: false; error: { code: string; message: string } }
+    >
+  }
+}
+
+/** A balance reading younger than this is served from cache, not the wire. */
+const BALANCE_TTL_MS = 10 * 60 * 1000
 
 /**
  * Client plugin body: the CyberWhale shell.overlay entry with its tracker.
@@ -61,16 +82,38 @@ export function apply(ctx: ClientContext): void {
     const tracker = new CyberPetTracker(ctx.sessions)
     tracker.start()
 
-    // Harness chat backend probe: the host-side petChat Remote when this
-    // deployment mounts it; absent rows degrade to the browser-direct online
-    // backend instead of faulting the pet fiber.
-    const petChat = (ctx.remote as unknown as Record<string, unknown>).petChat as PetChatRemoteFace | undefined
-    const askHarness = async (history: readonly ChatTurn[]): Promise<string> => {
-      if (petChat === undefined || typeof petChat.ask !== 'function') {
-        throw new Error('pet-chat-unavailable')
+    // petChat transport: in-tree assemblies publish the typed Remote face on
+    // ctx.remote; the npm shell's Remote assembly is frozen to the official
+    // remotes, so out-of-tree deployments fall back to the raw gateway RPC.
+    // The facade probe is lazy and guarded — the namespace may be absent, or
+    // its access gated by the inject-declaration invariant.
+    const petChatFace = (): PetChatRemoteFace | undefined => {
+      try {
+        return (ctx as unknown as { remote?: Record<string, unknown> }).remote?.petChat as
+          PetChatRemoteFace | undefined
       }
+      catch {
+        return undefined
+      }
+    }
+    const callPetChat = async <V>(method: 'ask' | 'balance', request: unknown): Promise<PetChatWireResult<V>> => {
+      const face = petChatFace()
+      if (face !== undefined && typeof face[method] === 'function') {
+        const call = face[method] as (request: never) => Promise<PetChatWireResult<V>>
+        return call(request as never)
+      }
+      const connection = (ctx as unknown as { connection?: ConnectionRpcFace }).connection
+      if (connection?.rpc?.call === undefined) throw new Error('pet-chat-unavailable')
+      // The host gateway derives the wire field from the service method's
+      // literal parameter name; both petChat methods take `request`.
+      const wire = await connection.rpc.call('/api', `petChat/${method}`, { args: { request } })
+      if (!wire.ok) throw new Error(wire.error.message)
+      return wire.value as PetChatWireResult<V>
+    }
+
+    const askHarness = async (history: readonly ChatTurn[]): Promise<string> => {
       const settings = tracker.getSnapshot().chat
-      const result = await petChat.ask({
+      const result = await callPetChat<{ reply: string }>('ask', {
         provider: 'deepseek-official',
         model: settings.model === '' ? 'deepseek-chat' : settings.model,
         history: history
@@ -79,6 +122,19 @@ export function apply(ctx: ClientContext): void {
       })
       if (!result.ok) throw new Error(result.error.message)
       return result.value.reply
+    }
+
+    // Account-balance sync: host-side fetch keeps the API key off the
+    // browser; a fresh reading short-circuits the wire.
+    const fetchBalance = async (): Promise<{ amount: number; currency: string }> => {
+      const cached = tracker.getSnapshot().balance
+      if (cached !== null && tracker.balanceFresh(BALANCE_TTL_MS)) {
+        return { amount: cached.amount, currency: cached.currency }
+      }
+      const result = await callPetChat<{ availableBalance: number; totalBalance: number; currency: string }>('balance', {})
+      if (!result.ok) throw new Error(result.error.message)
+      tracker.applyBalance(result.value.availableBalance, result.value.currency)
+      return { amount: result.value.availableBalance, currency: result.value.currency }
     }
 
     const dispose = ctx.slots.register({
@@ -92,6 +148,12 @@ export function apply(ctx: ClientContext): void {
         setColor: color => tracker.setColor(color),
         setView: view => tracker.setView(view),
         setQuota: quota => tracker.setQuota(quota),
+        setQuotaSource: source => tracker.setQuotaSource(source),
+        setTokensPerUnit: tokensPerUnit => tracker.setTokensPerUnit(tokensPerUnit),
+        fetchBalance,
+        setBalanceDisplay: display => tracker.setBalanceDisplay(display),
+        setThresholds: patch => tracker.setThresholds(patch),
+        setPanelSize: size => tracker.setPanelSize(size),
         setMode: mode => tracker.setMode(mode),
         setName: name => tracker.setName(name),
         setBadgeMetric: metric => tracker.setBadgeMetric(metric),

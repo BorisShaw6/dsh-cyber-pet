@@ -4,7 +4,7 @@
  * milestone grid. Pure functions over the tracker snapshot — components apply
  * them to the `usePetStats` delivery.
  */
-import type { PetStats } from './tracker.ts'
+import type { PetStats, PetThresholds } from './tracker.ts'
 
 /** One growth stage. */
 export interface PetLevel {
@@ -26,7 +26,7 @@ export const LEVELS: readonly PetLevel[] = [
   { threshold: 1_000_000, key: 'life.lvl3', scale: 1.18, crown: true },
 ]
 
-/** One milestone step (tokens). */
+/** One milestone step (tokens) — the factory default; user-adjustable via thresholds. */
 export const MILESTONE_STEP = 10_000
 
 /** Derived level position. */
@@ -39,19 +39,39 @@ export interface LevelInfo {
   toNext: number | null
 }
 
-/** @param totalTokens - lifetime tokens. @returns the stage the whale stands on. */
-export function levelOf(totalTokens: number): LevelInfo {
+/**
+ * The growth ladder with user thresholds substituted; stage cosmetics
+ * (scale, crown, copy keys) stay fixed.
+ * @param thresholds - user-configured stage thresholds; absent = defaults.
+ */
+export function ladderOf(thresholds?: PetThresholds): readonly PetLevel[] {
+  if (thresholds === undefined) return LEVELS
+  return [
+    { ...(LEVELS[0] as PetLevel), threshold: 0 },
+    { ...(LEVELS[1] as PetLevel), threshold: thresholds.level1 },
+    { ...(LEVELS[2] as PetLevel), threshold: thresholds.level2 },
+    { ...(LEVELS[3] as PetLevel), threshold: thresholds.level3 },
+  ]
+}
+
+/**
+ * @param totalTokens - lifetime tokens.
+ * @param thresholds - user-configured stage thresholds; absent = defaults.
+ * @returns the stage the whale stands on.
+ */
+export function levelOf(totalTokens: number, thresholds?: PetThresholds): LevelInfo {
+  const ladder = ladderOf(thresholds)
   let index = 0
-  for (let i = LEVELS.length - 1; i >= 0; i -= 1) {
-    if (totalTokens >= (LEVELS[i] as PetLevel).threshold) {
+  for (let i = ladder.length - 1; i >= 0; i -= 1) {
+    if (totalTokens >= (ladder[i] as PetLevel).threshold) {
       index = i
       break
     }
   }
-  const next = LEVELS[index + 1] as PetLevel | undefined
+  const next = ladder[index + 1] as PetLevel | undefined
   return {
     index,
-    level: LEVELS[index] as PetLevel,
+    level: ladder[index] as PetLevel,
     toNext: next === undefined ? null : next.threshold - totalTokens,
   }
 }
@@ -75,7 +95,8 @@ export const MOOD_EMOJI: Record<PetMood, string> = {
  */
 export function moodOf(stats: PetStats, effectiveMode: 'active' | 'standby' | 'sleep'): PetMood {
   if (effectiveMode === 'sleep') return 'sleepy'
-  if (stats.remaining <= stats.quota * 0.1) return 'anxious'
+  const anxiousRatio = stats.thresholds.anxiousPercent / 100
+  if (stats.remaining <= stats.quota * anxiousRatio) return 'anxious'
   if (stats.running) return 'focused'
   return 'happy'
 }

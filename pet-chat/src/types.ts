@@ -44,3 +44,24 @@ export interface PetChatFailure {
 export type PetChatAskResult =
   | { ok: true; value: PetChatAskValue }
   | { ok: false; error: PetChatFailure }
+
+/** One balance request (fields reserved for future provider selection). */
+export interface PetChatBalanceRequest {
+  /** Optional provider route hint; unused today. */
+  provider?: string
+}
+
+/** Successful balance value. */
+export interface PetChatBalanceValue {
+  /** Available balance in the account's currency. */
+  availableBalance: number
+  /** Total balance in the account's currency. */
+  totalBalance: number
+  /** Currency code the platform reports (e.g. CNY). */
+  currency: string
+}
+
+/** Settled balance outcome. */
+export type PetChatBalanceResult =
+  | { ok: true; value: PetChatBalanceValue }
+  | { ok: false; error: PetChatFailure }

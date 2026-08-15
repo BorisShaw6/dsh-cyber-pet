@@ -71,7 +71,8 @@ const MODES: readonly PetMode[] = ['active', 'standby', 'sleep']
  * @param props - injected verbs, bound stats hook, and the `t` seat.
  */
 export function CyberPet({
-  usePetStats, setSkin, setColor, setView, setQuota, setMode, setName, setBadgeMetric,
+  usePetStats, setSkin, setColor, setView, setQuota, setQuotaSource, setTokensPerUnit,
+  fetchBalance, setBalanceDisplay, setThresholds, setPanelSize, setMode, setName, setBadgeMetric,
   setCards, setSound, setRestEvery, startNap, wakeUp, cycleBadgeMetric, feed, askHarness,
   setMuted, setRoam, setChat, setPosition, resetTotals, activeLocale, setLocale, t,
 }: CyberPetProps & PropsLocale<'pet'>) {
@@ -102,7 +103,7 @@ export function CyberPet({
   }
 
   const effectiveMode: PetMode = stats.napUntil > Date.now() ? 'sleep' : stats.mode
-  const level = levelOf(stats.totalTokens)
+  const level = levelOf(stats.totalTokens, stats.thresholds)
   const mood = moodOf(stats, effectiveMode)
 
   // First-load bubble: yesterday's digest wins over the greeting.
@@ -376,6 +377,12 @@ export function CyberPet({
             setColor={setColor}
             setView={setView}
             setQuota={setQuota}
+            setQuotaSource={setQuotaSource}
+            setTokensPerUnit={setTokensPerUnit}
+            fetchBalance={fetchBalance}
+            setBalanceDisplay={setBalanceDisplay}
+            setThresholds={setThresholds}
+            setPanelSize={setPanelSize}
             setMode={setMode}
             setName={setName}
             setBadgeMetric={setBadgeMetric}

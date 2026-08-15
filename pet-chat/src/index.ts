@@ -16,7 +16,7 @@ import {
 } from '@deepseek-ai/dsh-llm'
 import type { ContentBlock, Message } from '@deepseek-ai/dsh-llm'
 import type {
-  PetChatAskRequest, PetChatAskResult,
+  PetChatAskRequest, PetChatAskResult, PetChatBalanceRequest, PetChatBalanceResult,
 } from './types.ts'
 
 export type * from './types.ts'
@@ -36,6 +36,18 @@ const PERSONA = 'You are a cute cyber whale pet living inside DeepSeek Harness. 
 const MAX_TURNS = 8
 /** Reply length cap for the one-shot request. */
 const MAX_REPLY_TOKENS = 220
+/** Billing endpoint queried when DEEPSEEK_BALANCE_URL is unset. */
+const DEFAULT_BALANCE_URL = 'https://api.deepseek.com/user/balance'
+
+/** Coerce a wire amount (number or numeric string) to a number, else null. */
+function toAmount(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (typeof value === 'string' && value.trim() !== '') {
+    const parsed = Number(value)
+    if (Number.isFinite(parsed)) return parsed
+  }
+  return null
+}
 
 /** One text block for a wire turn. */
 function textBlock(text: string): ContentBlock {
@@ -124,6 +136,51 @@ export class PetChatService extends TypertRemoteService {
         ok: false,
         error: {
           code: 'pet-chat-failed',
+          message: error instanceof Error ? error.message : String(error),
+        },
+      }
+    }
+  }
+
+  /**
+   * Report the account balance from the provider's billing endpoint. The
+   * credential stays on the host (DEEPSEEK_API_KEY env), so the browser never
+   * touches it; the endpoint honors DEEPSEEK_BALANCE_URL for gateways.
+   * @param request - reserved provider selection.
+   * @returns available/total balance with currency, or a business failure.
+   */
+  @Remote('balance')
+  async balance(request: PetChatBalanceRequest): Promise<PetChatBalanceResult> {
+    void request
+    const apiKey = process.env.DEEPSEEK_API_KEY?.trim() ?? ''
+    if (apiKey === '') {
+      return { ok: false, error: { code: 'missing-credential', message: 'DEEPSEEK_API_KEY is not set on the host' } }
+    }
+    const url = process.env.DEEPSEEK_BALANCE_URL?.trim() || DEFAULT_BALANCE_URL
+    try {
+      const response = await fetch(url, { headers: { authorization: `Bearer ${apiKey}` } })
+      if (!response.ok) {
+        return { ok: false, error: { code: `balance-http-${response.status}`, message: `balance endpoint returned ${response.status}` } }
+      }
+      const body = await response.json() as Record<string, unknown>
+      const record = typeof body.balance === 'object' && body.balance !== null
+        ? body.balance as Record<string, unknown>
+        : body
+      const available = toAmount(record.available_balance ?? record.availableBalance)
+      const total = toAmount(record.total_balance ?? record.totalBalance)
+      const currency = typeof record.currency === 'string' && record.currency.trim() !== ''
+        ? String(record.currency).trim()
+        : 'CNY'
+      if (available === null) {
+        return { ok: false, error: { code: 'balance-unparsable', message: 'balance payload carried no usable amount' } }
+      }
+      return { ok: true, value: { availableBalance: available, totalBalance: total ?? available, currency } }
+    }
+    catch (error) {
+      return {
+        ok: false,
+        error: {
+          code: 'balance-failed',
           message: error instanceof Error ? error.message : String(error),
         },
       }

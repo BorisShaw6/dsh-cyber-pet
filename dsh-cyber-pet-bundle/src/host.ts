@@ -13,20 +13,25 @@
 import { Remote } from '@deepseek-ai/dsh-typert-protocol'
 import PetChatService from '../../pet-chat/src/index.ts'
 
-Remote('ask')(PetChatService.prototype.ask, {
-  kind: 'method',
-  name: 'ask',
-  static: false,
-  private: false,
-  access: { get: () => PetChatService.prototype.ask },
-  metadata: {},
-  addInitializer(initializer) {
-    // The real decorator runs the initializer per instance, where
-    // Object.getPrototypeOf(this) === PetChatService.prototype; reproduce
-    // that with a bare instance so the marker lands on the right prototype.
-    initializer.call(Object.create(PetChatService.prototype))
-  },
-} as ClassMethodDecoratorContext)
+// Re-apply every Remote marker the source declares via decorators.
+for (const methodName of ['ask', 'balance'] as const) {
+  const method = (PetChatService.prototype as Record<string, unknown>)[methodName]
+  if (typeof method !== 'function') continue
+  Remote(methodName)(method as Parameters<ReturnType<typeof Remote>>[0], {
+    kind: 'method',
+    name: methodName,
+    static: false,
+    private: false,
+    access: { get: () => method },
+    metadata: {},
+    addInitializer(initializer) {
+      // The real decorator runs the initializer per instance, where
+      // Object.getPrototypeOf(this) === PetChatService.prototype; reproduce
+      // that with a bare instance so the marker lands on the right prototype.
+      initializer.call(Object.create(PetChatService.prototype))
+    },
+  } as ClassMethodDecoratorContext)
+}
 
 export * from '../../pet-chat/src/index.ts'
 export { default } from '../../pet-chat/src/index.ts'

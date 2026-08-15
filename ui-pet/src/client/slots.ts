@@ -4,7 +4,8 @@
  * `usePetStats` selector hook; inject carries only the mutation verbs.
  */
 import type {
-  PetBadgeMetric, PetCardConfig, PetChatSettings, PetMode, PetRoamSettings, PetSkin, PetView,
+  PetBadgeMetric, PetBalanceDisplay, PetCardConfig, PetChatSettings, PetMode, PetPanelSize,
+  PetQuotaSource, PetRoamSettings, PetSkin, PetThresholds, PetView,
 } from './tracker.ts'
 import type { ChatTurn } from './pet-chat.ts'
 
@@ -18,6 +19,23 @@ export interface PetActions {
   setView: (view: PetView) => void
   /** @param quota - replace the lifetime token budget. */
   setQuota: (quota: number) => void
+  /** @param source - where the quota comes from (manual input or balance sync). */
+  setQuotaSource: (source: PetQuotaSource) => void
+  /** @param tokensPerUnit - tokens one currency unit buys in balance mode. */
+  setTokensPerUnit: (tokensPerUnit: number) => void
+  /**
+   * Sync the account balance through the host-side petChat Remote; on
+   * success the tracker stores the reading (balance mode recomputes the
+   * quota). Rejects with a displayable error when the service or the host
+   * credential is absent. Throttled while the last reading is fresh.
+   */
+  fetchBalance: () => Promise<{ amount: number; currency: string }>
+  /** @param display - how the account balance shows in the overview. */
+  setBalanceDisplay: (display: PetBalanceDisplay) => void
+  /** @param patch - partial behavior-threshold update (milestone / levels / anxious). */
+  setThresholds: (patch: Partial<PetThresholds>) => void
+  /** @param size - user-resized panel footprint; null restores the factory size. */
+  setPanelSize: (size: PetPanelSize | null) => void
   /** @param mode - behavior mode (active / standby / sleep). */
   setMode: (mode: PetMode) => void
   /** @param name - pet display name. */

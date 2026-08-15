@@ -20,6 +20,7 @@
   color: rgba(240, 243, 248, 0.94);
   cursor: default;
   overflow: hidden;
+  position: relative;
   animation: panel-in 0.22s cubic-bezier(0.34, 1.4, 0.64, 1);
 }
 
@@ -143,7 +144,7 @@
   flex-direction: column;
   gap: 12px;
   padding: 4px 14px 14px;
-  max-height: 380px;
+  max-height: var(--pet-body-max, 380px);
   overflow-y: auto;
   overflow-x: hidden;
 }
@@ -584,4 +585,37 @@
 .sendBtn:hover {
   filter: brightness(1.08);
   transform: translateY(-1px);
+}
+
+/* Overview card drag affordance (reorder by dragging). */
+.cardDrag {
+  min-width: 0;
+  cursor: grab;
+}
+
+.cardDrag:active {
+  cursor: grabbing;
+}
+
+.cardDragging {
+  opacity: 0.45;
+}
+
+/* Corner grip: drag resizes the panel, double-click restores factory size. */
+.resizeHandle {
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  width: 15px;
+  height: 15px;
+  border-radius: 4px;
+  cursor: nwse-resize;
+  touch-action: none;
+  background: linear-gradient(135deg, transparent 46%, rgba(240, 243, 248, 0.32) 46%, rgba(240, 243, 248, 0.32) 54%, transparent 54%, transparent 68%, rgba(240, 243, 248, 0.32) 68%, rgba(240, 243, 248, 0.32) 76%, transparent 76%);
+  opacity: 0.7;
+  transition: opacity 0.15s ease;
+}
+
+.resizeHandle:hover {
+  opacity: 1;
 }

@@ -17,7 +17,6 @@
  */
 import type { ConversationSnapshot, ISessions, SessionId } from '@deepseek-ai/dsh-client-runtime/client'
 import { DEFAULT_COLOR, normalizeColor } from './color.ts'
-import { MILESTONE_STEP } from './pet-life.ts'
 
 /** Whale skin choice. */
 export type PetSkin = 'pixel' | 'skeuo'
@@ -59,6 +58,44 @@ export interface PetChatSettings {
   model: string
 }
 
+/** Where the lifetime quota comes from: typed by hand or synced from the account balance. */
+export type PetQuotaSource = 'manual' | 'account'
+
+/** Last synced account-balance reading. */
+export interface PetBalanceRecord {
+  /** Available balance in the account's currency. */
+  amount: number
+  /** Currency code reported by the platform (e.g. CNY). */
+  currency: string
+  /** Sync timestamp (epoch ms). */
+  at: number
+}
+
+/** How the account balance is displayed in the overview. */
+export type PetBalanceDisplay = 'currency' | 'tokens'
+
+/** User-adjustable behavior thresholds (the former hardcoded grid). */
+export interface PetThresholds {
+  /** Token grid step for milestone celebrations. */
+  milestoneEvery: number
+  /** Lifetime tokens reaching the junior stage. */
+  level1: number
+  /** Lifetime tokens reaching the adult stage. */
+  level2: number
+  /** Lifetime tokens reaching the golden-crown stage. */
+  level3: number
+  /** Remaining-quota percentage below which the whale turns anxious. */
+  anxiousPercent: number
+}
+
+/** User-resized panel footprint; null keeps the factory size. */
+export interface PetPanelSize {
+  /** Panel width in px. */
+  width: number
+  /** Scrollable body max-height in px. */
+  bodyHeight: number
+}
+
 /** The tracker's whole published fact set (immutable per notification). */
 export interface PetStats {
   sessionId: SessionId | null
@@ -84,6 +121,18 @@ export interface PetStats {
   contextTokens: number
   /** User-configured lifetime token budget. */
   quota: number
+  /** Where the quota comes from (typed manually or synced from balance). */
+  quotaSource: PetQuotaSource
+  /** Tokens one currency unit buys when quota rides the account balance. */
+  tokensPerUnit: number
+  /** Last synced account balance (null before the first successful sync). */
+  balance: PetBalanceRecord | null
+  /** Balance display mode in the overview (currency or estimated tokens). */
+  balanceDisplay: PetBalanceDisplay
+  /** User-adjustable behavior thresholds. */
+  thresholds: PetThresholds
+  /** User-resized panel footprint (null = factory size). */
+  panelSize: PetPanelSize | null
   /** `totalTokens` clamped to the quota for bar display. */
   used: number
   /** Remaining budget (floor 0). */
@@ -137,6 +186,12 @@ interface RateSample {
 /** Persisted shape under the localStorage key. */
 interface PetPersist {
   quota: number
+  quotaSource: PetQuotaSource
+  tokensPerUnit: number
+  balance: PetBalanceRecord | null
+  balanceDisplay: PetBalanceDisplay
+  thresholds: PetThresholds
+  panelSize: PetPanelSize | null
   skin: PetSkin
   color: string
   view: PetView
@@ -158,6 +213,16 @@ interface PetPersist {
 
 /** Factory default lifetime token budget (1M tokens). */
 export const DEFAULT_QUOTA = 1_000_000
+/** Default tokens one currency unit buys when quota rides the balance. */
+export const DEFAULT_TOKENS_PER_UNIT = 100_000
+/** Factory behavior thresholds. */
+export const DEFAULT_THRESHOLDS: PetThresholds = {
+  milestoneEvery: 10_000,
+  level1: 50_000,
+  level2: 200_000,
+  level3: 1_000_000,
+  anxiousPercent: 10,
+}
 /** Default pet name. */
 export const DEFAULT_NAME = '小深'
 /** Nap duration the rest reminder schedules (ms). */
@@ -230,6 +295,12 @@ function dayKey(time: number): string {
 function defaultPersist(): PetPersist {
   return {
     quota: DEFAULT_QUOTA,
+    quotaSource: 'manual',
+    tokensPerUnit: DEFAULT_TOKENS_PER_UNIT,
+    balance: null,
+    balanceDisplay: 'currency',
+    thresholds: { ...DEFAULT_THRESHOLDS },
+    panelSize: null,
     skin: 'pixel',
     color: DEFAULT_COLOR,
     view: 'full',
@@ -290,7 +361,7 @@ export class CyberPetTracker {
       this.perSession.set(id as SessionId, { tokens: record.tokens, turns: record.turns })
     }
     this.lastLifetimeTotal = this.lifetimeTotal()
-    this.persist.lastMilestone = Math.min(this.persist.lastMilestone, Math.floor(this.lastLifetimeTotal / MILESTONE_STEP))
+    this.persist.lastMilestone = Math.min(this.persist.lastMilestone, Math.floor(this.lastLifetimeTotal / this.persist.thresholds.milestoneEvery))
     this.computeDigest()
     this.snapshot = this.compose()
   }
@@ -417,6 +488,92 @@ export class CyberPetTracker {
     if (!Number.isFinite(quota) || quota < 1) return
     this.persist.quota = Math.floor(quota)
     this.commitSettings()
+  }
+
+  /** @param source - where the quota comes from (manual input or balance sync). */
+  setQuotaSource(source: PetQuotaSource): void {
+    this.persist.quotaSource = source
+    if (source === 'account') this.quotaFromBalance()
+    this.commitSettings()
+  }
+
+  /** @param tokensPerUnit - tokens one currency unit buys (floor 1). */
+  setTokensPerUnit(tokensPerUnit: number): void {
+    if (!Number.isFinite(tokensPerUnit) || tokensPerUnit < 1) return
+    this.persist.tokensPerUnit = Math.floor(tokensPerUnit)
+    if (this.persist.quotaSource === 'account') this.quotaFromBalance()
+    this.commitSettings()
+  }
+
+  /**
+   * Record one balance sync; account mode recomputes the quota from it.
+   * @param amount - available balance in the account's currency.
+   * @param currency - currency code reported by the platform.
+   */
+  applyBalance(amount: number, currency: string): void {
+    if (!Number.isFinite(amount) || amount < 0) return
+    this.persist.balance = { amount, currency, at: Date.now() }
+    if (this.persist.quotaSource === 'account') this.quotaFromBalance()
+    this.commitSettings()
+  }
+
+  /** Whether the last balance sync is younger than the window. */
+  balanceFresh(withinMs: number): boolean {
+    return this.persist.balance !== null && Date.now() - this.persist.balance.at < withinMs
+  }
+
+  /** @param display - how the account balance shows in the overview. */
+  setBalanceDisplay(display: PetBalanceDisplay): void {
+    this.persist.balanceDisplay = display
+    this.commitSettings()
+  }
+
+  /**
+   * Partial behavior-threshold update; each field clamped to a sane range
+   * and the stage ladder kept ascending.
+   * @param patch - fields to change.
+   */
+  setThresholds(patch: Partial<PetThresholds>): void {
+    const next = { ...this.persist.thresholds }
+    if (typeof patch.milestoneEvery === 'number' && Number.isFinite(patch.milestoneEvery)) {
+      next.milestoneEvery = clamp(Math.floor(patch.milestoneEvery), 100, 10_000_000)
+    }
+    if (typeof patch.level1 === 'number' && Number.isFinite(patch.level1)) {
+      next.level1 = clamp(Math.floor(patch.level1), 1, 1_000_000_000)
+    }
+    if (typeof patch.level2 === 'number' && Number.isFinite(patch.level2)) {
+      next.level2 = clamp(Math.floor(patch.level2), 1, 1_000_000_000)
+    }
+    if (typeof patch.level3 === 'number' && Number.isFinite(patch.level3)) {
+      next.level3 = clamp(Math.floor(patch.level3), 1, 1_000_000_000)
+    }
+    if (typeof patch.anxiousPercent === 'number' && Number.isFinite(patch.anxiousPercent)) {
+      next.anxiousPercent = clamp(Math.round(patch.anxiousPercent), 0, 90)
+    }
+    // Keep the ladder ascending regardless of what the user typed.
+    next.level2 = Math.max(next.level2, next.level1)
+    next.level3 = Math.max(next.level3, next.level2)
+    const stepChanged = next.milestoneEvery !== this.persist.thresholds.milestoneEvery
+    this.persist.thresholds = next
+    if (stepChanged) {
+      // Re-anchor the celebration grid so the new step applies from now on.
+      this.persist.lastMilestone = Math.floor(this.lifetimeTotal() / next.milestoneEvery)
+    }
+    this.commitSettings()
+  }
+
+  /** @param size - user-resized panel footprint; null restores the factory size. */
+  setPanelSize(size: PetPanelSize | null): void {
+    this.persist.panelSize = size === null
+      ? null
+      : { width: clamp(Math.round(size.width), 260, 640), bodyHeight: clamp(Math.round(size.bodyHeight), 160, 900) }
+    this.commitSettings()
+  }
+
+  /** Quota derivation tail: balance × rate, floor 1 token. */
+  private quotaFromBalance(): void {
+    if (this.persist.balance === null) return
+    this.persist.quota = Math.max(1, Math.floor(this.persist.balance.amount * this.persist.tokensPerUnit))
   }
 
   /** @param muted - legacy quiet flag kept for snapshot compatibility. */
@@ -560,10 +717,11 @@ export class CyberPetTracker {
       const today = dayKey(Date.now())
       if (this.persist.daily.date !== today) this.persist.daily = { date: today, tokens: 0 }
       this.persist.daily.tokens += delta
-      const grid = Math.floor(lifetime / MILESTONE_STEP)
+      const milestoneStep = this.persist.thresholds.milestoneEvery
+      const grid = Math.floor(lifetime / milestoneStep)
       if (grid > this.persist.lastMilestone) {
         this.persist.lastMilestone = grid
-        this.milestoneTotal = grid * MILESTONE_STEP
+        this.milestoneTotal = grid * milestoneStep
         this.milestoneRevision += 1
       }
       recordChanged = true
@@ -615,6 +773,12 @@ export class CyberPetTracker {
       tokenRate: Math.round(this.burnRate()),
       contextTokens: this.contextTokens,
       quota: this.persist.quota,
+      quotaSource: this.persist.quotaSource,
+      tokensPerUnit: this.persist.tokensPerUnit,
+      balance: this.persist.balance === null ? null : { ...this.persist.balance },
+      balanceDisplay: this.persist.balanceDisplay,
+      thresholds: { ...this.persist.thresholds },
+      panelSize: this.persist.panelSize === null ? null : { ...this.persist.panelSize },
       used,
       remaining: Math.max(0, this.persist.quota - totalTokens),
       skin: this.persist.skin,
@@ -692,6 +856,14 @@ function loadPersist(storage: Pick<Storage, 'getItem' | 'setItem'> | undefined):
     const daily = typeof parsed.daily === 'object' && parsed.daily !== null ? parsed.daily : base.daily
     return {
       quota: typeof parsed.quota === 'number' && parsed.quota >= 1 ? Math.floor(parsed.quota) : base.quota,
+      quotaSource: parsed.quotaSource === 'account' ? 'account' : 'manual',
+      tokensPerUnit: typeof parsed.tokensPerUnit === 'number' && parsed.tokensPerUnit >= 1
+        ? Math.floor(parsed.tokensPerUnit)
+        : base.tokensPerUnit,
+      balance: isBalanceRecord(parsed.balance) ? { ...parsed.balance } : null,
+      balanceDisplay: parsed.balanceDisplay === 'tokens' ? 'tokens' : 'currency',
+      thresholds: sanitizeThresholds(parsed.thresholds),
+      panelSize: isPanelSize(parsed.panelSize) ? { ...parsed.panelSize } : null,
       skin: parsed.skin === 'skeuo' ? 'skeuo' : 'pixel',
       color: typeof parsed.color === 'string' ? normalizeColor(parsed.color) : base.color,
       view: parsed.view === 'compact' ? 'compact' : 'full',
@@ -753,6 +925,42 @@ function sanitizeCards(value: unknown): PetCardConfig[] {
 function isFinitePoint(value: unknown): value is { x: number; y: number } {
   return typeof value === 'object' && value !== null
     && Number.isFinite((value as { x: unknown }).x) && Number.isFinite((value as { y: unknown }).y)
+}
+
+/** Narrow a parsed balance record; rejects malformed or negative shapes. */
+function isBalanceRecord(value: unknown): value is PetBalanceRecord {
+  if (typeof value !== 'object' || value === null) return false
+  const record = value as Partial<PetBalanceRecord>
+  return typeof record.amount === 'number' && Number.isFinite(record.amount) && record.amount >= 0
+    && typeof record.currency === 'string'
+    && typeof record.at === 'number' && Number.isFinite(record.at)
+}
+
+/** Merge a parsed thresholds record over the factory defaults, field by field. */
+function sanitizeThresholds(value: unknown): PetThresholds {
+  const base = { ...DEFAULT_THRESHOLDS }
+  if (typeof value !== 'object' || value === null) return base
+  const parsed = value as Partial<PetThresholds>
+  const pick = (candidate: number | undefined, lo: number, hi: number, fallback: number): number =>
+    typeof candidate === 'number' && Number.isFinite(candidate) ? clamp(Math.floor(candidate), lo, hi) : fallback
+  base.milestoneEvery = pick(parsed.milestoneEvery, 100, 10_000_000, base.milestoneEvery)
+  base.level1 = pick(parsed.level1, 1, 1_000_000_000, base.level1)
+  base.level2 = pick(parsed.level2, 1, 1_000_000_000, base.level2)
+  base.level3 = pick(parsed.level3, 1, 1_000_000_000, base.level3)
+  base.anxiousPercent = typeof parsed.anxiousPercent === 'number' && Number.isFinite(parsed.anxiousPercent)
+    ? clamp(Math.round(parsed.anxiousPercent), 0, 90)
+    : base.anxiousPercent
+  base.level2 = Math.max(base.level2, base.level1)
+  base.level3 = Math.max(base.level3, base.level2)
+  return base
+}
+
+/** Narrow a parsed panel-size record. */
+function isPanelSize(value: unknown): value is PetPanelSize {
+  if (typeof value !== 'object' || value === null) return false
+  const size = value as Partial<PetPanelSize>
+  return typeof size.width === 'number' && Number.isFinite(size.width)
+    && typeof size.bodyHeight === 'number' && Number.isFinite(size.bodyHeight)
 }
 
 function sanitizeRecords(value: unknown): Record<string, SessionRecord> {

@@ -1,7 +1,7 @@
 {
   "name": "@borisshaw6/dsh-cyber-pet",
   "description": "Cyber whale pet for DeepSeek Harness: a floating, feedable, color-customizable whale over shell.overlay that reports token usage, quota, interactions, and session counts — one dsh-plugin bundle carrying the host chat brain and the browser surface",
-  "version": "0.1.0",
+  "version": "0.3.1",
   "keywords": [
     "deepseek",
     "deepseek-harness",
