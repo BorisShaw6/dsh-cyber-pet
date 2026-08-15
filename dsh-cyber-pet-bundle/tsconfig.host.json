@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "emitDeclarationOnly": true,
+    "declaration": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@deepseek-ai/cordis": ["./node_modules/@deepseek-ai/cordis"],
+      "@deepseek-ai/dsh-invariants": ["./node_modules/@deepseek-ai/dsh-invariants"],
+      "@deepseek-ai/dsh-llm": ["./node_modules/@deepseek-ai/dsh-llm"],
+      "@deepseek-ai/dsh-typert-protocol": ["./node_modules/@deepseek-ai/dsh-typert-protocol"],
+      "@deepseek-ai/schemastery": ["./node_modules/@deepseek-ai/schemastery"],
+      "zod": ["./node_modules/zod"]
+    },
+    "rootDir": "../pet-chat/src",
+    "outDir": "lib/types"
+  },
+  "include": ["../pet-chat/src"]
+}

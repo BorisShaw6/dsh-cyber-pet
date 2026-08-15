@@ -10,6 +10,7 @@
 #   ./install.sh [path/to/deepseek-harness] [options]
 #
 # Options:
+#   --quick        clone a pinned DeepSeek Harness checkout when no path is given
 #   --force        overwrite existing plugin package directories
 #   --skip-deps    skip `pnpm install`
 #   --skip-build   skip `pnpm run build`
@@ -23,15 +24,17 @@ say()  { printf '\033[1;34m🐳\033[0m %s\n' "$*"; }
 ok()   { printf '\033[1;32m✓\033[0m %s\n' "$*"; }
 fail() { printf '\033[1;31m✗\033[0m %s\n' "$*" >&2; exit 1; }
 
-usage() { sed -n '2,16p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0; }
+usage() { sed -n '2,18p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0; }
 
 # ── parse arguments ──────────────────────────────────────────────────────────
 HARNESS=""
+QUICK=0
 FORCE=0
 SKIP_DEPS=0
 SKIP_BUILD=0
 for arg in "$@"; do
   case "$arg" in
+    --quick)      QUICK=1 ;;
     --force)      FORCE=1 ;;
     --skip-deps)  SKIP_DEPS=1 ;;
     --skip-build) SKIP_BUILD=1 ;;
@@ -50,7 +53,25 @@ if [[ -z "$HARNESS" ]]; then
     fi
   done
 fi
-[[ -n "$HARNESS" ]] || fail "harness checkout not found. Usage: ./install.sh /path/to/deepseek-harness"
+if [[ -z "$HARNESS" && "$QUICK" -eq 1 ]]; then
+  # Quick install: fetch a pinned harness checkout (this plugin is source-level —
+  # `npx @deepseek-ai/dsh web` ships prebuilt artifacts with nothing to patch).
+  HARNESS_VERSION="0.1.0-rc.5"
+  HARNESS="$SCRIPT_DIR/deepseek-harness"
+  if [[ -d "$HARNESS" ]]; then
+    say "$HARNESS already present — reusing the existing clone"
+  else
+    command -v git >/dev/null 2>&1 || fail "git not found (needed by --quick to clone the harness)"
+    say "Quick install: cloning deepseek-harness @ $HARNESS_VERSION (pinned tag)..."
+    git clone --depth 1 --branch "v$HARNESS_VERSION" \
+      https://github.com/deepseek-ai/deepseek-harness.git "$HARNESS" \
+      || git clone --depth 1 --branch "$HARNESS_VERSION" \
+      https://github.com/deepseek-ai/deepseek-harness.git "$HARNESS" \
+      || fail "could not clone deepseek-harness @ $HARNESS_VERSION"
+    ok "cloned deepseek-harness @ $HARNESS_VERSION"
+  fi
+fi
+[[ -n "$HARNESS" ]] || fail "harness checkout not found. Usage: ./install.sh /path/to/deepseek-harness  (or ./install.sh --quick to clone one)"
 [[ -f "$HARNESS/pnpm-workspace.yaml" && -d "$HARNESS/packages/client" ]] \
   || fail "$HARNESS does not look like a DeepSeek Harness checkout"
 HARNESS="$(cd "$HARNESS" && pwd)"

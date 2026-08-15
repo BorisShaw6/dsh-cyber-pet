@@ -1,0 +1,8 @@
+# dsh-cyber-pet profile layer — mounted by `dsh plugin --profile web add`.
+#
+# Host half: the petChat Remote (the whale's online brain over the llm seam).
+# Browser half: no roster row needed — the web shell discovers lib/client.js
+# from the package.json `dsh.client` declaration at profile startup.
+- insert:
+  - id: pet-chat
+    name: '@borisshaw6/dsh-cyber-pet'

@@ -12,6 +12,8 @@ The `/client` exports are the plugin body (`apply`/`inject`) and the shared cont
 
 The plugin ships as TWO packages that join the harness workspace: this client surface (`packages/client/ui-pet`) and its optional host-side chat brain (`packages/feedback/pet-chat`). Installation means copying both into a DeepSeek Harness checkout and adding four small registration lines. Tested against harness `0.1.0-rc.5` (developer preview — APIs move fast, pin the same release).
 
+> ⚠️ This is a source-level integration: it needs a harness **checkout** to patch and rebuild. If you run the npm-based harness (`npx @deepseek-ai/dsh web`, ≥ `0.1.0-rc.6`), use the one-line `dsh plugin add` bundle instead — see Option A in the repository README. Fastest source path: `./install.sh --quick` at the repo root clones the pinned harness and does everything below automatically.
+
 ### Prerequisites
 
 - Node.js ≥ 22.19 (24+ recommended)

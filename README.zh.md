@@ -27,22 +27,46 @@
 
 <p align="center"><img src="docs/whale-bubble.png" width="420" alt="气泡播报"/></p>
 
-## 一键安装
+## 安装
 
-前置条件：Node.js ≥ 22.19、pnpm（`corepack enable`）、一份 DeepSeek Harness 源码（已按 `0.1.0-rc.5` 验证）。
+### 方式 A — 一行插件安装（推荐）
+
+需要 DeepSeek Harness ≥ `0.1.0-rc.6`（`dsh plugin` 流程）与 PATH 上的 pnpm。兼容 npm 方式的 harness——无需源码 checkout、无需重新构建：
+
+```sh
+npx @deepseek-ai/dsh plugin --profile web add @borisshaw6/dsh-cyber-pet
+npx @deepseek-ai/dsh web                  # （重新）启动后打开 http://127.0.0.1:3080
+```
+
+bundle 包（[dsh-cyber-pet-bundle/](dsh-cyber-pet-bundle/)）同时携带两半——宿主侧 `petChat` Remote 与浏览器表面——通过 profile 的 `cordis.patch.yml` 层与 `dsh.client` 声明挂载。卸载：`npx @deepseek-ai/dsh plugin --profile web remove @borisshaw6/dsh-cyber-pet`，然后重启 profile。
+
+在包发布到 npm 之前，可以先装本地构建的 tarball：
+
+```sh
+cd dsh-cyber-pet-bundle && npm install && npm pack
+npx @deepseek-ai/dsh plugin --profile web add ./borisshaw6-dsh-cyber-pet-0.1.0.tgz
+```
+
+### 方式 B — 源码 checkout 安装（开发者）
+
+前置条件：Node.js ≥ 22.19、Git、pnpm（`corepack enable`）。已在 harness `0.1.0-rc.5` 上验证。
 
 ```sh
 git clone https://github.com/deepseek-ai/deepseek-harness.git
 git clone https://github.com/BorisShaw6/dsh-cyber-pet.git
-
-cd dsh-cyber-pet
-./install.sh ../deepseek-harness        # 拷贝两个包、注册 4 处配置、安装并构建
-
-cd ../deepseek-harness
-pnpm dsh web                            # 打开 http://127.0.0.1:3080
+cd dsh-cyber-pet && ./install.sh ../deepseek-harness
+cd ../deepseek-harness && pnpm dsh web     # 打开 http://127.0.0.1:3080
 ```
 
-就这样——右下角会出现小黄鲸。安装脚本幂等、可重复执行；可选参数：`--force`（覆盖已有插件文件）、`--skip-deps`、`--skip-build`。
+或者让安装脚本帮你拉取 harness：
+
+```sh
+git clone https://github.com/BorisShaw6/dsh-cyber-pet.git && cd dsh-cyber-pet && ./install.sh --quick
+```
+
+未指定 checkout 时，安装脚本会克隆 harness `0.1.0-rc.5`（固定 tag），随后拷贝两个包、注册 4 处配置、安装并构建。脚本幂等、可重复执行；可选参数：`--force`（覆盖已有插件文件）、`--skip-deps`、`--skip-build`。
+
+完整的手动步骤（拷贝两个包、编辑四处文件、构建）、使用指南与常见问题见 [ui-pet/README.zh.md](ui-pet/README.zh.md)。
 
 卸载：
 
@@ -72,16 +96,22 @@ pnpm dsh web                            # 打开 http://127.0.0.1:3080
 
 ```
 dsh-cyber-pet/
-├── install.sh            # 一键安装脚本
+├── install.sh            # 一键源码安装脚本（方式 B）
 ├── uninstall.sh          # 一键卸载脚本
 ├── scripts/
 │   └── patch-files.mjs   # 幂等注册引擎（应用/回滚）
+├── dsh-cyber-pet-bundle/ # dsh-plugin bundle 包（方式 A，可发 npm）
 ├── docs/                 # 画廊素材（截图 + 动画 SVG 演示）
 ├── ui-pet/               # → packages/client/ui-pet   （浏览器鲸鱼表面）
 └── pet-chat/             # → packages/feedback/pet-chat（宿主聊天 Remote）
 ```
 
 安装脚本会把 `ui-pet/` 与 `pet-chat/` 拷入 harness 工作区，并写入四处注册行（`tsconfig.host.json`、`tsconfig.client.json`、`packages/bundle/web-app/package.json`、`packages/bundle/web-app/cordis.patch.yml`）。完整的手动安装步骤、使用指南与常见问题见 [ui-pet/README.zh.md](ui-pet/README.zh.md)。
+
+## 注意事项
+
+- DeepSeek Harness 处于开发者预览阶段，版本间接口会变——方式 A 的 peers 钉在 `0.1.0-rc.6`；方式 B 钉住 harness checkout `0.1.0-rc.5`（`--quick` 克隆这个精确 tag）。
+- 方式 A 与方式 B 不要在同一份 harness 安装上混用——二选一。`dsh plugin add` 面向 harness ≥ `0.1.0-rc.6`；源码安装器面向 `0.1.0-rc.5`。
 
 ## 写在最后
 

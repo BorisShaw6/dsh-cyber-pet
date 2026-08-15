@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "emitDeclarationOnly": true,
+    "declaration": true,
+    "skipLibCheck": true,
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@deepseek-ai/cordis": ["./node_modules/@deepseek-ai/cordis"],
+      "@deepseek-ai/dsh-api-remotes": ["./node_modules/@deepseek-ai/dsh-api-remotes"],
+      "@deepseek-ai/dsh-client-locale": ["./node_modules/@deepseek-ai/dsh-client-locale"],
+      "@deepseek-ai/dsh-client-locale/client": ["./node_modules/@deepseek-ai/dsh-client-locale/lib/types/client/index.d.ts"],
+      "@deepseek-ai/dsh-client-runtime": ["./node_modules/@deepseek-ai/dsh-client-runtime"],
+      "@deepseek-ai/dsh-client-runtime/client": ["./node_modules/@deepseek-ai/dsh-client-runtime/lib/types/client/index.d.ts"],
+      "@deepseek-ai/dsh-client-ui-layout": ["./node_modules/@deepseek-ai/dsh-client-ui-layout"],
+      "@deepseek-ai/dsh-client-ui-layout/client": ["./node_modules/@deepseek-ai/dsh-client-ui-layout/lib/types/client/index.d.ts"],
+      "@deepseek-ai/dsh-client-ui-slots": ["./node_modules/@deepseek-ai/dsh-client-ui-slots"],
+      "@deepseek-ai/dsh-invariants": ["./node_modules/@deepseek-ai/dsh-invariants"],
+      "react": ["./node_modules/@types/react"],
+      "react/jsx-runtime": ["./node_modules/@types/react/jsx-runtime"]
+    },
+    "rootDir": "../ui-pet/src/client",
+    "outDir": "lib/types/client"
+  },
+  "include": ["../ui-pet/src/client", "../ui-pet/src/css-modules.d.ts"]
+}

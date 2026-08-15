@@ -146,7 +146,6 @@
   max-height: 380px;
   overflow-y: auto;
   overflow-x: hidden;
-  overflow-wrap: anywhere;
 }
 
 /* Overview: quota bar plus the counter grid. */
@@ -220,12 +219,13 @@
   white-space: nowrap;
 }
 
-/* Labels wrap up to two lines so long locale strings never widen the cell. */
+/* Labels wrap up to two lines so long locale strings never widen the cell.
+   Words wrap whole (never mid-word — no orphaned "s" on its own line); CJK
+   still breaks between characters, and the clamp ellipsizes the overflow. */
 .statLabel {
   font-size: 10px;
   line-height: 14px;
   color: rgba(240, 243, 248, 0.5);
-  overflow-wrap: anywhere;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -527,6 +527,8 @@
   background: rgba(255, 255, 255, 0.08);
   border-top-left-radius: 4px;
   animation: line-in 0.18s ease-out;
+  /* Free-text surface: long unbreakable strings (URLs, token ids) may break. */
+  overflow-wrap: anywhere;
 }
 
 .chatLineUser {

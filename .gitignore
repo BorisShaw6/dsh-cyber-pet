@@ -7,3 +7,12 @@ dist/
 # Local environment
 .env
 .DS_Store
+
+# Harness checkout cloned by `./install.sh --quick`
+/deepseek-harness/
+
+# Local plugin-install verification playground
+.dsh-scratch/
+
+# Bundle build tarballs
+*.tgz

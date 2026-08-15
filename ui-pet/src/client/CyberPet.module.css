@@ -180,6 +180,8 @@
   font-size: 10px;
   line-height: 14px;
   color: rgba(240, 243, 248, 0.6);
+  /* Metric captions stay on one line — never stack CJK vertically. */
+  white-space: nowrap;
 }
 
 .badgeTrack {
@@ -207,6 +209,7 @@
   line-height: 14px;
   font-variant-numeric: tabular-nums;
   color: rgba(245, 247, 250, 0.92);
+  white-space: nowrap;
 }
 
 /* Speech bubble anchored above the whale. Fixed width on purpose: abs-pos

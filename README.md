@@ -27,22 +27,46 @@ A cyber whale pet for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek
 
 <p align="center"><img src="docs/whale-bubble.png" width="420" alt="speech bubble"/></p>
 
-## One-click install
+## Install
 
-Requirements: Node.js ≥ 22.19, pnpm (`corepack enable`), and a DeepSeek Harness checkout (tested with `0.1.0-rc.5`).
+### Option A — one-line plugin install (recommended)
+
+Requires DeepSeek Harness ≥ `0.1.0-rc.6` (the `dsh plugin` flow) and pnpm on PATH. Works with the npm-based harness — no source checkout, no rebuild:
+
+```sh
+npx @deepseek-ai/dsh plugin --profile web add @borisshaw6/dsh-cyber-pet
+npx @deepseek-ai/dsh web                  # (re)start, then open http://127.0.0.1:3080
+```
+
+The bundle ([dsh-cyber-pet-bundle/](dsh-cyber-pet-bundle/)) carries both halves — the host-side `petChat` Remote and the browser surface — and mounts through the profile's `cordis.patch.yml` layer plus the `dsh.client` declaration. Uninstall: `npx @deepseek-ai/dsh plugin --profile web remove @borisshaw6/dsh-cyber-pet`, then restart the profile.
+
+Before the package reaches npm you can install the locally-built tarball instead:
+
+```sh
+cd dsh-cyber-pet-bundle && npm install && npm pack
+npx @deepseek-ai/dsh plugin --profile web add ./borisshaw6-dsh-cyber-pet-0.1.0.tgz
+```
+
+### Option B — source checkout install (developers)
+
+Requirements: Node.js ≥ 22.19, Git, and pnpm (`corepack enable`). Tested against harness `0.1.0-rc.5`.
 
 ```sh
 git clone https://github.com/deepseek-ai/deepseek-harness.git
 git clone https://github.com/BorisShaw6/dsh-cyber-pet.git
-
-cd dsh-cyber-pet
-./install.sh ../deepseek-harness        # copies packages, wires 4 files, installs, builds
-
-cd ../deepseek-harness
-pnpm dsh web                            # open http://127.0.0.1:3080
+cd dsh-cyber-pet && ./install.sh ../deepseek-harness
+cd ../deepseek-harness && pnpm dsh web     # open http://127.0.0.1:3080
 ```
 
-That's it — the yellow whale appears in the bottom-right corner. The installer is idempotent and safe to re-run; options: `--force` (replace existing plugin files), `--skip-deps`, `--skip-build`.
+Or let the installer fetch the harness for you:
+
+```sh
+git clone https://github.com/BorisShaw6/dsh-cyber-pet.git && cd dsh-cyber-pet && ./install.sh --quick
+```
+
+The installer clones harness `0.1.0-rc.5` (pinned tag) when no checkout is given, copies both packages, wires the 4 registration files, installs, and builds. It is idempotent and safe to re-run; options: `--force` (replace existing plugin files), `--skip-deps`, `--skip-build`.
+
+For the fully manual procedure (copy the two packages, edit the four files, build), the usage guide, and troubleshooting, see [ui-pet/README.md](ui-pet/README.md).
 
 Uninstall:
 
@@ -72,10 +96,11 @@ All counters and preferences persist in browser `localStorage` (`dsh.cyber-pet.v
 
 ```
 dsh-cyber-pet/
-├── install.sh            # one-click installer
+├── install.sh            # one-click source installer (Option B)
 ├── uninstall.sh          # one-click uninstaller
 ├── scripts/
 │   └── patch-files.mjs   # idempotent registration engine (apply/revert)
+├── dsh-cyber-pet-bundle/ # dsh-plugin bundle package (Option A, npm-publishable)
 ├── docs/                 # gallery assets (screenshots + animated SVG demos)
 ├── ui-pet/               # → packages/client/ui-pet   (browser whale surface)
 └── pet-chat/             # → packages/feedback/pet-chat (host chat Remote)
@@ -85,7 +110,8 @@ The installer copies `ui-pet/` and `pet-chat/` into the harness workspace and ad
 
 ## Notes
 
-- DeepSeek Harness is in developer preview and breaks APIs between releases — pin the harness version this repo was tested against (`0.1.0-rc.5`).
+- DeepSeek Harness is in developer preview and breaks APIs between releases — Option A pins peers at `0.1.0-rc.6`; Option B pins the harness checkout at `0.1.0-rc.5` (`--quick` clones that exact tag).
+- Option A and Option B must not be mixed on the same harness install — pick one. `dsh plugin add` targets harness ≥ `0.1.0-rc.6`; the source installer targets `0.1.0-rc.5`.
 - The Online Pet backend keeps your API key in browser `localStorage`; prefer Harness Pet when the host credentials are configured.
 
 ## Why this little whale exists

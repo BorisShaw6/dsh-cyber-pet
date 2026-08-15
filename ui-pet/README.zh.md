@@ -12,6 +12,8 @@
 
 插件以两个包的形式加入 harness 工作区：本客户端表面（`packages/client/ui-pet`）与可选的宿主侧聊天大脑（`packages/feedback/pet-chat`）。安装 = 把两者拷入 DeepSeek Harness 源码树，再加四处注册行。已在 harness `0.1.0-rc.5` 上验证（开发者预览版，API 变化很快，请钉住相同版本）。
 
+> ⚠️ 这是源码级集成：需要一份 harness **源码 checkout** 才能打补丁并重新构建。如果你跑的是 npm 方式的 harness（`npx @deepseek-ai/dsh web`，≥ `0.1.0-rc.6`），请改用一行的 `dsh plugin add` bundle——见仓库 README 的方式 A。源码最快路径：在仓库根目录执行 `./install.sh --quick`，它会克隆固定版本的 harness 并自动完成下面全部步骤。
+
 ### 前置条件
 
 - Node.js ≥ 22.19（推荐 24+）
