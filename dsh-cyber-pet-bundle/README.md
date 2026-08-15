@@ -6,7 +6,7 @@ This is the **dsh-plugin bundle** build of [dsh-cyber-pet](https://github.com/Bo
 
 ## Install (one line)
 
-Requires DeepSeek Harness ≥ `0.1.0-rc.6` and pnpm on PATH.
+Requires DeepSeek Harness ≥ `0.1.0-rc.6` and pnpm on PATH (one-time: `npm install -g pnpm`).
 
 ```sh
 npx @deepseek-ai/dsh plugin --profile web add @borisshaw6/dsh-cyber-pet
@@ -39,6 +39,19 @@ Restart the web profile after either. Whale counters and preferences persist in 
 
 - Tested against harness `0.1.0-rc.6` (developer preview — APIs move fast; peer ranges pin that release).
 - Source-level install into a harness checkout (with the full manual procedure, usage guide, and troubleshooting) lives in the [repository README](https://github.com/BorisShaw6/dsh-cyber-pet).
+
+## Building from source (maintainers)
+
+The bundle builds standalone — no harness checkout needed. Sources stay in `../ui-pet/src` and `../pet-chat/src`, shared with the source-level install flow:
+
+```sh
+npm install
+npm run build     # → lib/index.js (host half) + lib/client.js (browser half) + lib/types/
+npm pack          # → borisshaw6-dsh-cyber-pet-<version>.tgz, locally installable for testing
+npm publish --access public
+```
+
+Bump `version` in package.json before each publish; users then update with `dsh plugin --profile web update @borisshaw6/dsh-cyber-pet`.
 
 ## License
 

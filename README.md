@@ -29,23 +29,51 @@ A cyber whale pet for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek
 
 ## Install
 
-### Option A — one-line plugin install (recommended)
+### Option A — one-line install (recommended, zero source code)
 
-Requires DeepSeek Harness ≥ `0.1.0-rc.6` (the `dsh plugin` flow) and pnpm on PATH. Works with the npm-based harness — no source checkout, no rebuild:
+All you need is [Node.js](https://nodejs.org) (≥ 22.19, LTS recommended) and pnpm — the plugin command delegates to it, one-time setup: `npm install -g pnpm`. No Git, no source checkout, no build.
+
+**1. Add the whale to your harness web profile — one line:**
 
 ```sh
 npx @deepseek-ai/dsh plugin --profile web add @borisshaw6/dsh-cyber-pet
-npx @deepseek-ai/dsh web                  # (re)start, then open http://127.0.0.1:3080
 ```
 
-The bundle ([dsh-cyber-pet-bundle/](dsh-cyber-pet-bundle/)) carries both halves — the host-side `petChat` Remote and the browser surface — and mounts through the profile's `cordis.patch.yml` layer plus the `dsh.client` declaration. Uninstall: `npx @deepseek-ai/dsh plugin --profile web remove @borisshaw6/dsh-cyber-pet`, then restart the profile.
+The first run asks `y` to confirm downloading the harness; when you see `+ @borisshaw6/dsh-cyber-pet`, it is installed.
 
-Before the package reaches npm you can install the locally-built tarball instead:
+**2. Start (or restart) the web UI:**
 
 ```sh
-cd dsh-cyber-pet-bundle && npm install && npm pack
-npx @deepseek-ai/dsh plugin --profile web add ./borisshaw6-dsh-cyber-pet-0.1.0.tgz
+npx @deepseek-ai/dsh web
 ```
+
+> The whale loads at profile startup. If a web session is already running, stop it and run the command again — a bare browser refresh is not enough.
+
+**3. Open http://127.0.0.1:3080** — a yellow whale appears and starts swimming; click it to open the dashboard panel.
+
+Optional — confirm the plugin layer is mounted:
+
+```sh
+npx @deepseek-ai/dsh --profile web --dump-config | grep pet-chat
+```
+
+Update / uninstall:
+
+```sh
+npx @deepseek-ai/dsh plugin --profile web update @borisshaw6/dsh-cyber-pet
+npx @deepseek-ai/dsh plugin --profile web remove @borisshaw6/dsh-cyber-pet
+```
+
+Under the hood, the [bundle package](dsh-cyber-pet-bundle/) carries both halves (host-side `petChat` Remote + browser surface) and mounts through the profile's `cordis.patch.yml` layer plus the `dsh.client` declaration. Building it from source is described in [dsh-cyber-pet-bundle/README.md](dsh-cyber-pet-bundle/README.md).
+
+**Troubleshooting**
+
+| Symptom | Fix |
+|---|---|
+| No whale after install | Restart the web profile (step 2) — the browser half loads at startup — then hard-refresh the page. |
+| `pnpm not found on PATH` | `npm install -g pnpm` (or `corepack enable`), then re-run step 1. |
+| Port 3080 already in use | `npx @deepseek-ai/dsh web --port 3099`, or stop whatever is holding 3080. |
+| Harness older than `0.1.0-rc.6` | Upgrade the harness, or use Option B below. |
 
 ### Option B — source checkout install (developers)
 

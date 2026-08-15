@@ -29,23 +29,51 @@
 
 ## 安装
 
-### 方式 A — 一行插件安装（推荐）
+### 方式 A — 一行安装（推荐，零源码）
 
-需要 DeepSeek Harness ≥ `0.1.0-rc.6`（`dsh plugin` 流程）与 PATH 上的 pnpm。兼容 npm 方式的 harness——无需源码 checkout、无需重新构建：
+只需装好 [Node.js](https://nodejs.org)（≥ 22.19，推荐 LTS）和 pnpm（插件命令内部依赖它，一次性安装：`npm install -g pnpm`）。不用 Git、不用克隆源码、不用构建。
+
+**1. 一行命令，把鲸鱼装进 harness 的 web profile：**
 
 ```sh
 npx @deepseek-ai/dsh plugin --profile web add @borisshaw6/dsh-cyber-pet
-npx @deepseek-ai/dsh web                  # （重新）启动后打开 http://127.0.0.1:3080
 ```
 
-bundle 包（[dsh-cyber-pet-bundle/](dsh-cyber-pet-bundle/)）同时携带两半——宿主侧 `petChat` Remote 与浏览器表面——通过 profile 的 `cordis.patch.yml` 层与 `dsh.client` 声明挂载。卸载：`npx @deepseek-ai/dsh plugin --profile web remove @borisshaw6/dsh-cyber-pet`，然后重启 profile。
+首次运行 npx 会问 `y` 确认下载 harness；看到 `+ @borisshaw6/dsh-cyber-pet` 就是装好了。
 
-在包发布到 npm 之前，可以先装本地构建的 tarball：
+**2. 启动（或重启）Web 界面：**
 
 ```sh
-cd dsh-cyber-pet-bundle && npm install && npm pack
-npx @deepseek-ai/dsh plugin --profile web add ./borisshaw6-dsh-cyber-pet-0.1.0.tgz
+npx @deepseek-ai/dsh web
 ```
+
+> 鲸鱼在 profile 启动时加载。如果已有 web 在运行，先停掉再执行上面的命令——只刷新浏览器页面是不够的。
+
+**3. 打开 http://127.0.0.1:3080**——黄色小鲸鱼出现并开始游动，点它打开面板。
+
+可选——确认插件层已挂载：
+
+```sh
+npx @deepseek-ai/dsh --profile web --dump-config | grep pet-chat
+```
+
+升级 / 卸载：
+
+```sh
+npx @deepseek-ai/dsh plugin --profile web update @borisshaw6/dsh-cyber-pet
+npx @deepseek-ai/dsh plugin --profile web remove @borisshaw6/dsh-cyber-pet
+```
+
+原理：[bundle 包](dsh-cyber-pet-bundle/)同时携带两半（宿主侧 `petChat` Remote + 浏览器表面），通过 profile 的 `cordis.patch.yml` 层与 `dsh.client` 声明挂载。从源码构建见 [dsh-cyber-pet-bundle/README.md](dsh-cyber-pet-bundle/README.md)。
+
+**常见问题**
+
+| 现象 | 解决 |
+|---|---|
+| 装完看不到鲸鱼 | 重启 web profile（第 2 步）——浏览器端在启动时加载——然后强制刷新页面。 |
+| `pnpm not found on PATH` | `npm install -g pnpm`（或 `corepack enable`）后重跑第 1 步。 |
+| 3080 端口被占用 | `npx @deepseek-ai/dsh web --port 3099`，或先停掉占用 3080 的进程。 |
+| harness 版本低于 `0.1.0-rc.6` | 升级 harness，或改用下面的方式 B。 |
 
 ### 方式 B — 源码 checkout 安装（开发者）
 
