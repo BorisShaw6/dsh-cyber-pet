@@ -2,12 +2,12 @@
 
 A cyber whale pet for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) — click a language below to expand it.
 
-[🇬🇧 English](#readme-en) · [🇨🇳 中文](#readme-zh)
+[English](#readme-en) · [中文](#readme-zh)
 
 ---
 
 <details open id="readme-en">
-<summary><b>🇬🇧 English</b> (click to collapse / expand)</summary>
+<summary><b>English</b> (click to collapse / expand)</summary>
 
 A cyber whale pet for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness): a floating, feedable, color-customizable whale that lives inside the Web UI and reports your token usage, quota, context occupancy, interactions, and conversation counts — with three chat backends, growth levels, moods, milestone celebrations, and a one-click PNG report card.
 
@@ -110,7 +110,7 @@ In an era where everyone is being pushed to run faster and faster, regulations a
 ---
 
 <details id="readme-zh">
-<summary><b>🇨🇳 中文</b>（点击展开 / 收起）</summary>
+<summary><b>中文</b>（点击展开 / 收起）</summary>
 
 给 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 的赛博鲸鱼宠物：一只悬浮在 Web 页面里、可以投喂、可以换色的鲸鱼，实时播报 token 用量、额度、上下文占用、交互次数与对话框数量——自带三种聊天后端、成长等级、情绪系统、里程碑庆祝与一键 PNG 报告卡。
 
