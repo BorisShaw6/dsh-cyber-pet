@@ -1,6 +1,13 @@
 # dsh-cyber-pet 🐳
 
-English | [中文](#中文说明)
+A cyber whale pet for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) — click a language below to expand it.
+
+[🇬🇧 English](#readme-en) · [🇨🇳 中文](#readme-zh)
+
+---
+
+<details open id="readme-en">
+<summary><b>🇬🇧 English</b> (click to collapse / expand)</summary>
 
 A cyber whale pet for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness): a floating, feedable, color-customizable whale that lives inside the Web UI and reports your token usage, quota, context occupancy, interactions, and conversation counts — with three chat backends, growth levels, moods, milestone celebrations, and a one-click PNG report card.
 
@@ -8,14 +15,14 @@ A cyber whale pet for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek
 
 **Two skins** — pixel-art and skeuomorphic (the animated tiles are live SVG recreations of the in-app skins; the photos are real screenshots):
 
-| Pixel-art 像素风 | Skeuomorphic 拟物风 |
+| Pixel-art | Skeuomorphic |
 |:---:|:---:|
 | ![pixel whale demo](docs/demo-pixel.svg) | ![skeuo whale demo](docs/demo-skeuo.svg) |
 | ![pixel whale in app](docs/whale-pixel.png) | ![skeuo whale in app](docs/whale-skeuo.png) |
 
-**The dashboard in both languages** (中文 / English):
+**The dashboard in both UI languages** (Chinese / English):
 
-| 中文面板 | English panel |
+| Chinese UI | English UI |
 |:---:|:---:|
 | ![dashboard zh](docs/whale-panel-zh.png) | ![dashboard en](docs/whale-panel-en.png) |
 
@@ -29,7 +36,7 @@ Requirements: Node.js ≥ 22.19, pnpm (`corepack enable`), and a DeepSeek Harnes
 
 ```sh
 git clone https://github.com/deepseek-ai/deepseek-harness.git
-git clone https://github.com/<you>/dsh-cyber-pet.git
+git clone https://github.com/BorisShaw6/dsh-cyber-pet.git
 
 cd dsh-cyber-pet
 ./install.sh ../deepseek-harness        # copies packages, wires 4 files, installs, builds
@@ -48,19 +55,19 @@ Uninstall:
 
 ## What you get
 
-- 🐋 **Two skins** — pixel-art and skeuomorphic; **seven preset colors + free picker** (default 小黄鲸)
-- 🧭 **Behavior modes** — 活跃 / 静候 / 睡眠, via right-click quick menu or Settings
+- 🐋 **Two skins** — pixel-art and skeuomorphic; **seven preset colors + free picker** (default Sunny Yellow)
+- 🧭 **Behavior modes** — Active / Standby / Sleep, via right-click quick menu or Settings
 - 🏊 **Autonomous roaming** — swim speed follows the live token burn rate × your speed ratio, inside your chosen roam area
-- 📊 **Glass dashboard** — 概览 / 聊天 / 设置 tabs; user-composed stat cards (visibility / size / order), quota bar, context occupancy, last-turn cost, burn rate
-- 🎛️ **Under-whale badge** — click to cycle 额度 → 上下文 → 轮次
-- 💬 **Chat with the whale** — 本地宝贝 (rule-based, zero requests), 在线宝贝 (any OpenAI-compatible endpoint you configure), 宿主宝贝 (host-side `petChat` Remote, credentials stay on the host — needs `DEEPSEEK_API_KEY`)
-- 🌱 **Growth system** — 幼鲸 → 少年鲸 → 成年鲸 → 金冠鲸 (crown at max level)
+- 📊 **Glass dashboard** — Overview / Chat / Settings tabs; user-composed stat cards (visibility / size / order), quota bar, context occupancy, last-turn cost, burn rate
+- 🎛️ **Under-whale badge** — click to cycle Quota → Context → Turns
+- 💬 **Chat with the whale** — Local Pet (rule-based, zero requests), Online Pet (any OpenAI-compatible endpoint you configure), Harness Pet (host-side `petChat` Remote, credentials stay on the host — needs `DEEPSEEK_API_KEY`)
+- 🌱 **Growth system** — Calf → Junior → Adult → Golden (crown at max level)
 - 😊 **Mood engine** — happy / focused / anxious (<10% quota) / sleepy
 - 🎉 **Milestones & digest** — celebration every 10k tokens; "yesterday you burned X tokens" on first load
 - 🍱 **Feeding** — drag the 🪙 snack onto the whale
 - ⏸️ **Rest reminder** — naps for 3 minutes after N consecutive turns
 - 📸 **Report card** — one-click PNG export with the whale and your numbers
-- 🔊 **Soft sound effects** (toggleable), 🌍 中文 / English switch
+- 🔊 **Soft sound effects** (toggleable), 🌍 Chinese / English UI switch
 
 All counters and preferences persist in browser `localStorage` (`dsh.cyber-pet.v3`).
 
@@ -82,7 +89,7 @@ The installer copies `ui-pet/` and `pet-chat/` into the harness workspace and ad
 ## Notes
 
 - DeepSeek Harness is in developer preview and breaks APIs between releases — pin the harness version this repo was tested against (`0.1.0-rc.5`).
-- The 在线宝贝 backend keeps your API key in browser `localStorage`; prefer 宿主宝贝 when the host credentials are configured.
+- The Online Pet backend keeps your API key in browser `localStorage`; prefer Harness Pet when the host credentials are configured.
 
 ## Why this little whale exists
 
@@ -98,13 +105,16 @@ In an era where everyone is being pushed to run faster and faster, regulations a
 
 **Hello, friends.**
 
+</details>
+
 ---
 
-## 中文说明
+<details id="readme-zh">
+<summary><b>🇨🇳 中文</b>（点击展开 / 收起）</summary>
 
 给 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 的赛博鲸鱼宠物：一只悬浮在 Web 页面里、可以投喂、可以换色的鲸鱼，实时播报 token 用量、额度、上下文占用、交互次数与对话框数量——自带三种聊天后端、成长等级、情绪系统、里程碑庆祝与一键 PNG 报告卡。
 
-### 界面预览
+## 界面预览
 
 **两种造型** — 像素风与拟物风（动态图为应用内皮肤的 SVG 实时复刻，下方为真实截图）：
 
@@ -115,7 +125,7 @@ In an era where everyone is being pushed to run faster and faster, regulations a
 
 **中英双语面板**：
 
-| 中文面板 | English 面板 |
+| 中文面板 | 英文面板 |
 |:---:|:---:|
 | ![中文面板](docs/whale-panel-zh.png) | ![英文面板](docs/whale-panel-en.png) |
 
@@ -123,13 +133,13 @@ In an era where everyone is being pushed to run faster and faster, regulations a
 
 <p align="center"><img src="docs/whale-bubble.png" width="420" alt="气泡播报"/></p>
 
-### 一键安装
+## 一键安装
 
 前置条件：Node.js ≥ 22.19、pnpm（`corepack enable`）、一份 DeepSeek Harness 源码（已按 `0.1.0-rc.5` 验证）。
 
 ```sh
 git clone https://github.com/deepseek-ai/deepseek-harness.git
-git clone https://github.com/<you>/dsh-cyber-pet.git
+git clone https://github.com/BorisShaw6/dsh-cyber-pet.git
 
 cd dsh-cyber-pet
 ./install.sh ../deepseek-harness        # 拷贝两个包、注册 4 处配置、安装并构建
@@ -146,9 +156,40 @@ pnpm dsh web                            # 打开 http://127.0.0.1:3080
 ./uninstall.sh /path/to/deepseek-harness --purge
 ```
 
-功能与目录说明见上文英文部分，详细的手动安装步骤、使用指南与常见问题见 [ui-pet/README.zh.md](ui-pet/README.zh.md)。
+## 功能一览
 
-### 写在最后
+- 🐋 **两种造型** — 像素风与拟物风；**七个预设色 + 自由取色器**（默认小黄鲸）
+- 🧭 **行为模式** — 活跃 / 静候 / 睡眠，右键快捷菜单或设置里切换
+- 🏊 **自动巡游** — 游速 = 实时 token 消耗速度 × 你的速度比，活动范围随你设定
+- 📊 **玻璃拟态面板** — 概览 / 聊天 / 设置三个标签页；卡片矩阵可自定义（显示 / 大小 / 顺序），额度条、上下文占用、上一轮消耗、消耗速度
+- 🎛️ **鲸鱼下方的悬浮条** — 点击在 额度 → 上下文 → 轮次 之间切换
+- 💬 **和鲸鱼聊天** — 本地宝贝（规则大脑、零请求）、在线宝贝（你配置的任意 OpenAI 兼容接口）、宿主宝贝（宿主侧 `petChat` Remote，凭据留在宿主——需要 `DEEPSEEK_API_KEY`）
+- 🌱 **成长系统** — 幼鲸 → 少年鲸 → 成年鲸 → 金冠鲸（满级戴皇冠）
+- 😊 **情绪系统** — 开心 / 专注 / 焦虑（额度不足 10%）/ 困倦
+- 🎉 **里程碑与日报** — 每 1 万 tokens 庆祝一次；首次加载播报"昨天你烧了 X tokens"
+- 🍱 **投喂** — 把 🪙 小鱼干拖到鲸鱼身上
+- ⏸️ **休息提醒** — 连续 N 轮后打盹 3 分钟
+- 📸 **报告卡** — 一键导出带鲸鱼和你的数据的 PNG
+- 🔊 **轻柔音效**（可关闭），🌍 中 / 英界面切换
+
+全部计数与偏好持久化在浏览器 `localStorage`（`dsh.cyber-pet.v3`）。
+
+## 目录结构
+
+```
+dsh-cyber-pet/
+├── install.sh            # 一键安装脚本
+├── uninstall.sh          # 一键卸载脚本
+├── scripts/
+│   └── patch-files.mjs   # 幂等注册引擎（应用/回滚）
+├── docs/                 # 画廊素材（截图 + 动画 SVG 演示）
+├── ui-pet/               # → packages/client/ui-pet   （浏览器鲸鱼表面）
+└── pet-chat/             # → packages/feedback/pet-chat（宿主聊天 Remote）
+```
+
+安装脚本会把 `ui-pet/` 与 `pet-chat/` 拷入 harness 工作区，并写入四处注册行（`tsconfig.host.json`、`tsconfig.client.json`、`packages/bundle/web-app/package.json`、`packages/bundle/web-app/cordis.patch.yml`）。完整的手动安装步骤、使用指南与常见问题见 [ui-pet/README.zh.md](ui-pet/README.zh.md)。
+
+## 写在最后
 
 满心期待与欣喜中，DeepSeek Harness 终于正式面世。身处奔涌向前的 AI 浪潮里，我们每个开发者都是这个时代的亲历者。作为后端工程师，日常工作里我们或是循着 Spec 文档推进需求，或是在各类驱动规范与开发标准的框架中打磨业务逻辑；AI 工具的飞速迭代在提效的同时，也无形中增添了追赶的压力，仿佛脚步稍慢，就会落在时代身后。
 
@@ -161,6 +202,10 @@ pnpm dsh web                            # 打开 http://127.0.0.1:3080
 在所有人都被时代推着加速奔跑的当下，规范与压力常伴左右。但我始终觉得，埋头 coding 的间隙，也该留一点碎片化的休闲时刻。愿这个小小的赛博宠物，能给你紧绷的开发日常，添上片刻无关 KPI、无关规范的纯粹快乐。
 
 **你好，朋友们。**
+
+</details>
+
+---
 
 ## License
 
