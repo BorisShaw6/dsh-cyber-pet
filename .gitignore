@@ -1,0 +1,9 @@
+# Dependencies / build output (users build inside their harness checkout)
+node_modules/
+lib/
+dist/
+*.tsbuildinfo
+
+# Local environment
+.env
+.DS_Store

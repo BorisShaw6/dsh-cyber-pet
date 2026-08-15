@@ -1,0 +1,585 @@
+/* PetPanel: the whale's glass dashboard. Dark glass in every theme (the pet
+   owns its own surface), the user's whale color rides --pet-accent, and the
+   layout is three tabs: Overview / Chat / Settings. */
+
+.panel {
+  box-sizing: border-box;
+  width: 300px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  background: rgba(20, 24, 33, 0.86);
+  backdrop-filter: blur(18px) saturate(1.3);
+  -webkit-backdrop-filter: blur(18px) saturate(1.3);
+  box-shadow:
+    0 18px 48px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+  line-height: 18px;
+  color: rgba(240, 243, 248, 0.94);
+  cursor: default;
+  overflow: hidden;
+  animation: panel-in 0.22s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+@keyframes panel-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Header: identity + status, then the tab strip. */
+/* Header: identity block above a full-width tab strip (rows never fight for
+   the 300px width, in any locale). */
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px 8px;
+}
+
+.headerText {
+  min-width: 0;
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  row-gap: 4px;
+  min-width: 0;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 700;
+  background: linear-gradient(90deg, var(--pet-accent, #ffc53d), #7cc4ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Growth stage chip riding the header title line. */
+.levelChip {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 1px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.07);
+  font-size: 10px;
+  line-height: 16px;
+  font-weight: 600;
+  color: rgba(240, 243, 248, 0.8);
+  -webkit-text-fill-color: rgba(240, 243, 248, 0.8);
+  white-space: nowrap;
+}
+
+.subtitle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: rgba(240, 243, 248, 0.5);
+}
+
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #3ddc97;
+}
+
+.statusDotBusy {
+  background: var(--pet-accent, #ffc53d);
+  animation: dot-pulse 1s ease-in-out infinite;
+}
+
+@keyframes dot-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+.tabs {
+  display: inline-flex;
+  gap: 2px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 3px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.tab {
+  appearance: none;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border: none;
+  border-radius: 8px;
+  padding: 3px 8px;
+  font-size: 11px;
+  line-height: 16px;
+  color: rgba(240, 243, 248, 0.55);
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.tab:hover {
+  color: rgba(240, 243, 248, 0.85);
+}
+
+.tabActive {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 14px 14px;
+  max-height: 380px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overflow-wrap: anywhere;
+}
+
+/* Overview: quota bar plus the counter grid. */
+.quotaBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.quotaMeta {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+  color: rgba(240, 243, 248, 0.6);
+  font-variant-numeric: tabular-nums;
+}
+
+.remaining {
+  color: var(--pet-accent, #ffc53d);
+  font-weight: 700;
+}
+
+.quotaTrack {
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.quotaFill {
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--pet-accent, #ffc53d), #7cc4ff);
+  transition: width 0.45s ease;
+}
+
+.quotaFillFull {
+  background: linear-gradient(90deg, #f0564f, #ff8a3d);
+}
+
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.statCell {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  padding: 8px 9px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: background 0.15s ease;
+}
+
+.statCell:hover {
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.statValue {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Labels wrap up to two lines so long locale strings never widen the cell. */
+.statLabel {
+  font-size: 10px;
+  line-height: 14px;
+  color: rgba(240, 243, 248, 0.5);
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.statHint {
+  font-size: 9px;
+  line-height: 12px;
+  color: rgba(240, 243, 248, 0.35);
+}
+
+/* Card sizes: S trims padding/type, L enlarges both. */
+.statCellS {
+  padding: 5px 8px;
+}
+
+.statCellS .statValue {
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.statCellL {
+  padding: 12px 12px;
+}
+
+.statCellL .statValue {
+  font-size: 18px;
+  line-height: 24px;
+}
+
+/* Report card export button. */
+.exportBtn {
+  appearance: none;
+  align-self: flex-end;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  padding: 4px 12px;
+  font-size: 11px;
+  line-height: 16px;
+  color: rgba(240, 243, 248, 0.85);
+  background: rgba(255, 255, 255, 0.07);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.exportBtn:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+/* Overview card manager rows. */
+.cardRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cardLabel {
+  flex: 1;
+  min-width: 0;
+  font-size: 11px;
+  color: rgba(240, 243, 248, 0.7);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Shared control furniture. */
+.segment {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.segmentBtn {
+  appearance: none;
+  border: none;
+  border-radius: 8px;
+  padding: 3px 10px;
+  font-size: 11px;
+  line-height: 16px;
+  color: rgba(240, 243, 248, 0.55);
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.segmentBtn:hover {
+  color: rgba(240, 243, 248, 0.85);
+}
+
+.segmentBtnActive {
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* Control rows wrap when a locale renders long labels. */
+.settingRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+}
+
+.settingBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.settingLabel {
+  font-size: 11px;
+  color: rgba(240, 243, 248, 0.6);
+  flex: none;
+  max-width: 100%;
+}
+
+.checkRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.checkbox {
+  margin: 0;
+  accent-color: var(--pet-accent, #ffc53d);
+}
+
+.sliderRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sliderRow input[type='range'] {
+  flex: 1;
+  accent-color: var(--pet-accent, #ffc53d);
+}
+
+.sliderValue {
+  flex: none;
+  width: 36px;
+  text-align: right;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: rgba(240, 243, 248, 0.75);
+}
+
+/* Color swatches. */
+.swatches {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.swatch {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.12s ease, border-color 0.12s ease;
+}
+
+.swatch:hover {
+  transform: scale(1.15);
+}
+
+.swatchActive {
+  border-color: #ffffff;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25);
+}
+
+.colorInput {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+
+/* Text fields. */
+.field {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 5px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 12px;
+  line-height: 18px;
+  color: rgba(240, 243, 248, 0.92);
+  font-variant-numeric: tabular-nums;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.field:focus {
+  border-color: var(--pet-accent, #ffc53d);
+}
+
+.quotaEdit {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1 1 160px;
+  min-width: 0;
+  max-width: 60%;
+}
+
+.miniBtn {
+  appearance: none;
+  flex: none;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 11px;
+  line-height: 16px;
+  color: rgba(240, 243, 248, 0.85);
+  background: rgba(255, 255, 255, 0.07);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.miniBtn:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.resetBtn {
+  appearance: none;
+  align-self: flex-end;
+  border: 1px solid rgba(240, 86, 79, 0.45);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 11px;
+  line-height: 16px;
+  color: #ff8a84;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.resetBtn:hover {
+  background: rgba(240, 86, 79, 0.14);
+}
+
+.onlineHint {
+  font-size: 10px;
+  line-height: 14px;
+  color: rgba(240, 243, 248, 0.4);
+}
+
+/* Chat tab. */
+.chatModeRow {
+  display: flex;
+  justify-content: center;
+}
+
+.onlineForm {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.chatList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 120px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 8px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.chatLine {
+  max-width: 86%;
+  padding: 6px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  line-height: 17px;
+  background: rgba(255, 255, 255, 0.08);
+  border-top-left-radius: 4px;
+  animation: line-in 0.18s ease-out;
+}
+
+.chatLineUser {
+  align-self: flex-end;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 4px;
+  background: color-mix(in srgb, var(--pet-accent, #ffc53d) 30%, rgba(255, 255, 255, 0.06));
+}
+
+@keyframes line-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.chatInputRow {
+  display: flex;
+  gap: 6px;
+}
+
+.chatInput {
+  box-sizing: border-box;
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 12px;
+  line-height: 18px;
+  color: rgba(240, 243, 248, 0.92);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.chatInput:focus {
+  border-color: var(--pet-accent, #ffc53d);
+}
+
+.sendBtn {
+  appearance: none;
+  flex: none;
+  border: none;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 600;
+  color: #14181f;
+  background: linear-gradient(135deg, var(--pet-accent, #ffc53d), #7cc4ff);
+  cursor: pointer;
+  transition: filter 0.15s ease, transform 0.12s ease;
+}
+
+.sendBtn:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
