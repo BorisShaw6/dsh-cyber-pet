@@ -23,8 +23,6 @@ A cyber whale pet for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek
 
 <p align="center"><img src="docs/whale-bubble.png" width="420" alt="speech bubble"/></p>
 
-> Want a screen recording instead? Drop an mp4 into `docs/` (e.g. `docs/demo.mp4`) and swap it in here — GitHub renders repo-committed videos natively.
-
 ## One-click install
 
 Requirements: Node.js ≥ 22.19, pnpm (`corepack enable`), and a DeepSeek Harness checkout (tested with `0.1.0-rc.5`).
@@ -124,8 +122,6 @@ In an era where everyone is being pushed to run faster and faster, regulations a
 **它会说话** — 每轮对话结束，鲸鱼用气泡播报本轮消耗与剩余额度：
 
 <p align="center"><img src="docs/whale-bubble.png" width="420" alt="气泡播报"/></p>
-
-> 想换成录屏？把 mp4 放进 `docs/`（如 `docs/demo.mp4`）再替换这里的引用即可，GitHub 原生支持仓库内视频。
 
 ### 一键安装
 
