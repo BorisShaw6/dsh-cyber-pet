@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>dsh-cyber-pet · 在线演示</title>
+<style>
+  :root { --accent: #ffc53d; --bg: #10151d; --card: rgba(20, 24, 33, 0.86); --line: rgba(255,255,255,0.12); --text: rgba(240,243,248,0.94); --dim: rgba(240,243,248,0.55); }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: radial-gradient(1200px 600px at 70% -10%, #1a2436 0%, var(--bg) 60%); color: var(--text); font-family: system-ui, -apple-system, "PingFang SC", sans-serif; min-height: 100vh; }
+  .wrap { max-width: 1060px; margin: 0 auto; padding: 28px 20px 60px; }
+  header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+  header h1 { font-size: 22px; }
+  header .sub { color: var(--dim); font-size: 13px; }
+  .links { margin-bottom: 18px; font-size: 13px; }
+  .links a { color: #7cc4ff; text-decoration: none; margin-right: 14px; }
+  .links a:hover { text-decoration: underline; }
+  .layout { display: grid; grid-template-columns: 1fr 320px; gap: 18px; }
+  @media (max-width: 860px) { .layout { grid-template-columns: 1fr; } }
+
+  /* Ocean playground */
+  .ocean { position: relative; height: 420px; border: 1px solid var(--line); border-radius: 16px; background: linear-gradient(180deg, rgba(77,159,255,0.08), rgba(77,159,255,0.02) 70%); overflow: hidden; }
+  .ocean .hint { position: absolute; left: 12px; bottom: 10px; font-size: 11px; color: var(--dim); pointer-events: none; }
+  #pet { position: absolute; left: 60px; top: 160px; width: 110px; cursor: grab; transition: filter 0.4s ease; }
+  #pet svg { width: 100%; height: auto; display: block; animation: bob 2.4s ease-in-out infinite; }
+  #pet.standby svg { animation: bob 4.5s ease-in-out infinite; }
+  #pet.sleep { filter: grayscale(0.55) brightness(0.72); }
+  #pet.sleep svg { animation: none; }
+  @keyframes bob { 0%,100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-7px) rotate(-1.5deg); } }
+  .zzz { position: absolute; top: -16px; right: -6px; font-size: 18px; display: none; animation: rise 2.2s ease-in-out infinite; }
+  #pet.sleep .zzz { display: block; }
+  @keyframes rise { 0% { opacity: 0; transform: translateY(4px) scale(0.8); } 40% { opacity: 1; } 100% { opacity: 0; transform: translateY(-12px) scale(1.1); } }
+  .crown { position: absolute; top: -22px; left: 50%; transform: translateX(-50%) rotate(-8deg); font-size: 22px; display: none; }
+  #pet.golden .crown { display: block; }
+  .bubble { position: absolute; width: 220px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); backdrop-filter: blur(12px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); font-size: 12px; line-height: 18px; text-align: center; opacity: 0; transform: translateY(6px) scale(0.94); transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1); pointer-events: none; }
+  .bubble.show { opacity: 1; transform: translateY(0) scale(1); }
+
+  /* Panel */
+  .panel { border: 1px solid var(--line); border-radius: 16px; background: var(--card); backdrop-filter: blur(16px); padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+  .panel h2 { font-size: 14px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .chip { font-size: 10px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); background: rgba(255,255,255,0.07); color: rgba(240,243,248,0.8); }
+  .panel .desc { font-size: 11px; color: var(--dim); }
+  .quota-meta { display: flex; justify-content: space-between; font-size: 11px; color: var(--dim); margin-bottom: 6px; }
+  .quota-meta b { color: var(--accent); font-weight: 700; }
+  .track { height: 8px; border-radius: 4px; background: rgba(255,255,255,0.09); overflow: hidden; }
+  .fill { height: 100%; width: 0%; border-radius: 4px; background: linear-gradient(90deg, var(--accent), #7cc4ff); transition: width 0.4s ease; }
+  .fill.full { background: linear-gradient(90deg, #f0564f, #ff8a3d); }
+  .stats { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; }
+  .cell { min-width: 0; padding: 8px; border-radius: 12px; background: rgba(255,255,255,0.05); }
+  .cell .v { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cell .k { font-size: 10px; color: var(--dim); }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: 12px; }
+  .row .lbl { color: var(--dim); font-size: 11px; }
+  .seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 10px; background: rgba(255,255,255,0.06); }
+  .seg button { flex: 1; min-width: 0; border: none; border-radius: 8px; padding: 3px 9px; font-size: 11px; color: var(--dim); background: transparent; cursor: pointer; white-space: nowrap; }
+  .seg button.on { background: rgba(255,255,255,0.16); color: #fff; font-weight: 600; }
+  .swatches { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .sw { width: 20px; height: 20px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; }
+  .sw.on { border-color: #fff; box-shadow: 0 0 0 2px rgba(255,255,255,0.25); }
+  input[type="color"] { width: 24px; height: 24px; border: none; border-radius: 50%; background: transparent; padding: 0; cursor: pointer; }
+  .btn { border: 1px solid var(--line); border-radius: 8px; padding: 5px 12px; font-size: 12px; color: var(--text); background: rgba(255,255,255,0.07); cursor: pointer; }
+  .btn:hover { background: rgba(255,255,255,0.14); }
+  .btn.primary { background: linear-gradient(135deg, var(--accent), #7cc4ff); color: #14181f; font-weight: 700; border: none; }
+  .btn.primary:hover { filter: brightness(1.08); }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  footer { margin-top: 22px; font-size: 12px; color: var(--dim); line-height: 20px; }
+  footer code { background: rgba(255,255,255,0.08); padding: 1px 6px; border-radius: 6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🐳 dsh-cyber-pet · 在线演示</h1>
+    <span class="sub">这是独立演示页，无需安装 DeepSeek Harness</span>
+  </header>
+  <div class="links">
+    <a href="https://github.com/BorisShaw6/dsh-cyber-pet">GitHub 仓库</a>
+    <a href="https://github.com/BorisShaw6/dsh-cyber-pet/releases">Releases</a>
+    <a href="https://github.com/deepseek-ai/deepseek-harness">DeepSeek Harness</a>
+  </div>
+
+  <div class="layout">
+    <div class="ocean" id="ocean">
+      <div id="pet">
+        <span class="crown">👑</span>
+        <span class="zzz">💤</span>
+        <div id="whaleHolder"></div>
+      </div>
+      <div class="bubble" id="bubble"></div>
+      <div class="hint">拖动鲸鱼移动 · 右侧面板可换肤/换色/模拟对话</div>
+    </div>
+
+    <div class="panel">
+      <h2>😊 <span id="petName">小深</span> <span class="chip" id="levelChip">幼鲸</span></h2>
+      <div class="desc">你的用量小管家 · <span id="modeLabel">活跃中</span></div>
+
+      <div>
+        <div class="quota-meta"><span id="usedLabel">已用 0 / 100k</span><b id="remainLabel">剩余 100k</b></div>
+        <div class="track"><div class="fill" id="quotaFill"></div></div>
+      </div>
+
+      <div class="stats">
+        <div class="cell"><div class="v" id="sSession">0</div><div class="k">本对话 tokens</div></div>
+        <div class="cell"><div class="v" id="sTotal">0</div><div class="k">累计 tokens</div></div>
+        <div class="cell"><div class="v" id="sLast">—</div><div class="k">上一轮消耗</div></div>
+        <div class="cell"><div class="v" id="sTurns">0</div><div class="k">交互次数</div></div>
+        <div class="cell"><div class="v" id="sFed">0</div><div class="k">投喂次数</div></div>
+        <div class="cell"><div class="v" id="sMode">活跃</div><div class="k">当前模式</div></div>
+      </div>
+
+      <div class="row"><span class="lbl">造型</span>
+        <div class="seg" id="skinSeg">
+          <button data-skin="pixel" class="on">像素风</button>
+          <button data-skin="skeuo">拟物风</button>
+        </div>
+      </div>
+
+      <div class="row"><span class="lbl">模式</span>
+        <div class="seg" id="modeSeg">
+          <button data-mode="active" class="on">活跃</button>
+          <button data-mode="standby">静候</button>
+          <button data-mode="sleep">睡眠</button>
+        </div>
+      </div>
+
+      <div class="row"><span class="lbl">体色</span>
+        <div class="swatches" id="swatches"></div>
+      </div>
+
+      <div class="actions">
+        <button class="btn primary" id="simTurn">模拟一轮对话</button>
+        <button class="btn" id="feedBtn">🪙 投喂</button>
+        <button class="btn" id="resetBtn">清零</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    实际插件里，鲸鱼会读取 DeepSeek Harness 的真实会话数据（tokens / 额度 / 上下文 / 交互次数），并支持右键快捷菜单、自动巡游、里程碑庆祝、聊天（本地 / 在线 / 宿主三种后端）与 PNG 报告卡导出。<br>
+    安装只需一行：<code>./install.sh /path/to/deepseek-harness</code>
+  </footer>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  // ---------- state ----------
+  var QUOTA = 100000;
+  var state = { skin: 'pixel', mode: 'active', color: '#ffc53d', session: 0, total: 0, turns: 0, fed: 0, last: null, milestone: 0 };
+  var COLORS = ['#ffc53d', '#4d9fff', '#ff7eb6', '#3ddc97', '#9d7bff', '#ff8a3d', '#252b36'];
+  var LEVELS = [[0, '幼鲸'], [20000, '少年鲸'], [50000, '成年鲸'], [90000, '金冠鲸']];
+
+  // ---------- color helpers ----------
+  function norm(hex) {
+    var m = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(hex.trim());
+    if (!m) return '#ffc53d';
+    var b = m[1];
+    if (b.length === 3) b = b.split('').map(function (c) { return c + c; }).join('');
+    return '#' + b.toLowerCase();
+  }
+  function chan(hex) { var c = norm(hex).slice(1); return [parseInt(c.slice(0, 2), 16), parseInt(c.slice(2, 4), 16), parseInt(c.slice(4, 6), 16)]; }
+  function mix(a, b, t) {
+    var ca = chan(a), cb = chan(b);
+    var p = function (n) { return Math.round(Math.min(255, Math.max(0, n))).toString(16).padStart(2, '0'); };
+    return '#' + p(ca[0] + (cb[0] - ca[0]) * t) + p(ca[1] + (cb[1] - ca[1]) * t) + p(ca[2] + (cb[2] - ca[2]) * t);
+  }
+  function darken(hex, t) { return mix(hex, '#000000', t); }
+  function lighten(hex, t) { return mix(hex, '#ffffff', t); }
+  function fmt(n) {
+    if (n < 1000) return String(Math.round(n));
+    if (n < 1000000) { var k = (n / 1000).toFixed(1); return (k.endsWith('.0') ? k.slice(0, -2) : k) + 'k'; }
+    var m2 = (n / 1000000).toFixed(1); return (m2.endsWith('.0') ? m2.slice(0, -2) : m2) + 'M';
+  }
+
+  // ---------- whale renderers ----------
+  var FRAME = [
+    '....S....................', '...SSS...................', '....S....................',
+    '..BBBBBBB............BB..', '.BBBBBBBBB..........BBBB.', 'BBBBBBBBBBB........BBBB..',
+    'BBBBBBBBBBBB......BBBB...', 'BWBBBBBBBBBBBBBBBBBBB....', 'BBBBBBBBBBBBBBBBBBBBB....',
+    '.BBBBBBBBBBBBBBBBBBB.....', '..BBBBBBBBBBBBBBBBB......', '...DDBBBBBBBBBBBB........',
+    '.....DDBBBBBBBB..........', '.......DDBBBB.............', '.........DD...............'];
+
+  function renderPixel(color) {
+    var legend = { B: color, D: darken(color, 0.42), W: '#ffffff', S: '#7cc4ff' };
+    var rects = [];
+    FRAME.forEach(function (row, y) {
+      for (var x = 0; x < row.length; x++) {
+        var f = legend[row.charAt(x)];
+        if (f) rects.push('<rect x="' + x + '" y="' + y + '" width="1.02" height="1.02" fill="' + f + '"/>');
+      }
+    });
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 15" shape-rendering="crispEdges">' + rects.join('') + '</svg>';
+  }
+
+  function renderSkeuo(color) {
+    var body = 'M 14 48 C 14 31, 30 20, 54 20 C 78 20, 94 28, 101 39 L 113 27 C 110 35, 110 42, 114 51 L 100 47 C 92 58, 76 66, 56 66 C 32 66, 14 60, 14 48 Z';
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 92">'
+      + '<defs>'
+      + '<linearGradient id="db" x1="0" y1="0" x2="0" y2="1">'
+      + '<stop offset="0%" stop-color="' + lighten(color, 0.32) + '"/>'
+      + '<stop offset="42%" stop-color="' + color + '"/>'
+      + '<stop offset="100%" stop-color="' + darken(color, 0.68) + '"/>'
+      + '</linearGradient>'
+      + '<radialGradient id="ds" cx="30%" cy="24%" r="62%">'
+      + '<stop offset="0%" stop-color="#ffffff" stop-opacity="0.5"/>'
+      + '<stop offset="60%" stop-color="#ffffff" stop-opacity="0.07"/>'
+      + '<stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>'
+      + '</radialGradient>'
+      + '</defs>'
+      + '<ellipse cx="58" cy="84" rx="34" ry="4" fill="#000" opacity="0.25"/>'
+      + '<path d="M 25 20 C 24 14, 22 10, 18 6 M 26 20 C 27 13, 29 9, 33 5 M 25.5 20 C 25.5 15, 25.5 11, 25.5 7" fill="none" stroke="#4d9fff" stroke-opacity="0.75" stroke-width="2.6" stroke-linecap="round"/>'
+      + '<path d="' + body + '" fill="url(#db)"/>'
+      + '<path d="' + body + '" fill="url(#ds)"/>'
+      + '<path d="M 18 54 C 30 62, 48 65, 62 63 C 78 61, 90 55, 98 47" fill="none" stroke="' + lighten(color, 0.62) + '" stroke-opacity="0.5" stroke-width="1.6" stroke-linecap="round"/>'
+      + '<path d="M 40 52 C 46 60, 54 62, 60 60 C 54 55, 47 52, 40 52 Z" fill="' + darken(color, 0.68) + '"/>'
+      + '<circle cx="27" cy="44" r="3" fill="#ffffff"/><circle cx="26" cy="43" r="1.1" fill="#1a1f27"/>'
+      + '<path d="M 20 52 C 23 54.5, 28 55, 32 53.5" fill="none" stroke="' + darken(color, 0.68) + '" stroke-width="1.4" stroke-linecap="round"/>'
+      + '</svg>';
+  }
+
+  // ---------- DOM ----------
+  var $ = function (id) { return document.getElementById(id); };
+  var pet = $('pet'), ocean = $('ocean'), bubble = $('bubble'), holder = $('whaleHolder');
+
+  function drawWhale() {
+    holder.innerHTML = state.skin === 'pixel' ? renderPixel(state.color) : renderSkeuo(state.color);
+    document.documentElement.style.setProperty('--accent', state.color);
+  }
+
+  // ---------- swatches ----------
+  var swBox = $('swatches');
+  COLORS.forEach(function (c) {
+    var el = document.createElement('button');
+    el.className = 'sw' + (c === state.color ? ' on' : '');
+    el.style.background = c;
+    el.title = c;
+    el.addEventListener('click', function () {
+      state.color = c;
+      swBox.querySelectorAll('.sw').forEach(function (s) { s.classList.remove('on'); });
+      el.classList.add('on');
+      drawWhale();
+    });
+    swBox.appendChild(el);
+  });
+  var picker = document.createElement('input');
+  picker.type = 'color'; picker.value = state.color; picker.title = '自定义颜色';
+  picker.addEventListener('input', function () {
+    state.color = norm(picker.value);
+    swBox.querySelectorAll('.sw').forEach(function (s) { s.classList.remove('on'); });
+    drawWhale();
+  });
+  swBox.appendChild(picker);
+
+  // ---------- segments ----------
+  $('skinSeg').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    state.skin = b.dataset.skin;
+    $('skinSeg').querySelectorAll('button').forEach(function (x) { x.classList.toggle('on', x === b); });
+    drawWhale();
+  });
+  var MODE_LABEL = { active: '活跃中', standby: '静候中', sleep: '睡眠中' };
+  $('modeSeg').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    setMode(b.dataset.mode);
+  });
+  function setMode(m) {
+    state.mode = m;
+    $('modeSeg').querySelectorAll('button').forEach(function (x) { x.classList.toggle('on', x.dataset.mode === m); });
+    pet.classList.toggle('sleep', m === 'sleep');
+    pet.classList.toggle('standby', m === 'standby');
+    $('modeLabel').textContent = MODE_LABEL[m];
+    $('sMode').textContent = { active: '活跃', standby: '静候', sleep: '睡眠' }[m];
+    if (m === 'sleep') say('呼噜呼噜…（我睡啦，别吵我）');
+  }
+
+  // ---------- bubble ----------
+  var bubbleTimer = null;
+  function say(text) {
+    if (state.mode === 'sleep') return;
+    bubble.textContent = text;
+    var r = pet.getBoundingClientRect(), o = ocean.getBoundingClientRect();
+    bubble.style.left = Math.max(6, Math.min(r.left - o.left - 55, o.width - 226)) + 'px';
+    bubble.style.top = Math.max(6, r.top - o.top - bubble.offsetHeight - 14) + 'px';
+    bubble.classList.add('show');
+    clearTimeout(bubbleTimer);
+    bubbleTimer = setTimeout(function () { bubble.classList.remove('show'); }, 4200);
+  }
+
+  // ---------- stats ----------
+  function levelOf(total) {
+    var lv = LEVELS[0];
+    LEVELS.forEach(function (l) { if (total >= l[0]) lv = l; });
+    return lv;
+  }
+  function refresh() {
+    $('sSession').textContent = fmt(state.session);
+    $('sTotal').textContent = fmt(state.total);
+    $('sLast').textContent = state.last === null ? '—' : fmt(state.last);
+    $('sTurns').textContent = String(state.turns);
+    $('sFed').textContent = String(state.fed);
+    $('usedLabel').textContent = '已用 ' + fmt(state.total) + ' / ' + fmt(QUOTA);
+    $('remainLabel').textContent = '剩余 ' + fmt(Math.max(0, QUOTA - state.total));
+    var ratio = Math.min(1, state.total / QUOTA);
+    var fill = $('quotaFill');
+    fill.style.width = (ratio * 100).toFixed(1) + '%';
+    fill.classList.toggle('full', ratio >= 1);
+    var lv = levelOf(state.total);
+    $('levelChip').textContent = lv[1];
+    pet.classList.toggle('golden', lv[1] === '金冠鲸');
+  }
+
+  $('simTurn').addEventListener('click', function () {
+    if (state.mode === 'sleep') { say('Zzz…（睡眠中，先让我睡会儿）'); return; }
+    var cost = 300 + Math.floor(Math.random() * 2200);
+    state.session += cost; state.total += cost; state.turns += 1; state.last = cost;
+    refresh();
+    var grid = Math.floor(state.total / 10000);
+    if (grid > state.milestone) {
+      state.milestone = grid;
+      say('🎉 里程碑！累计游过 ' + fmt(grid * 10000) + ' tokens 啦～');
+    } else {
+      var remain = Math.max(0, QUOTA - state.total);
+      var text = '这轮花了 ' + fmt(cost) + ' tokens，还剩 ' + fmt(remain);
+      if (remain <= QUOTA * 0.1) text += ' —— 额度快用完啦，悠着点！';
+      say(text);
+    }
+  });
+
+  $('feedBtn').addEventListener('click', function () {
+    if (state.mode === 'sleep') { say('Zzz…（睡眠中投喂无效哦）'); return; }
+    state.fed += 1; refresh();
+    say('嗷呜～好吃！谢谢投喂（已喂 ' + state.fed + ' 次）');
+  });
+
+  $('resetBtn').addEventListener('click', function () {
+    state.session = 0; state.total = 0; state.turns = 0; state.last = null; state.milestone = 0;
+    refresh();
+    say('清零啦，轻装上阵！');
+  });
+
+  // ---------- drag ----------
+  var drag = null;
+  pet.addEventListener('pointerdown', function (e) {
+    e.preventDefault();
+    pet.setPointerCapture && pet.setPointerCapture(e.pointerId);
+    var r = pet.getBoundingClientRect(), o = ocean.getBoundingClientRect();
+    drag = { dx: e.clientX - r.left, dy: e.clientY - r.top, moved: false, sx: e.clientX, sy: e.clientY };
+  });
+  pet.addEventListener('pointermove', function (e) {
+    if (!drag) return;
+    if (Math.abs(e.clientX - drag.sx) > 4 || Math.abs(e.clientY - drag.sy) > 4) drag.moved = true;
+    if (!drag.moved) return;
+    var o = ocean.getBoundingClientRect();
+    var x = Math.max(0, Math.min(e.clientX - drag.dx - o.left, o.width - pet.offsetWidth));
+    var y = Math.max(0, Math.min(e.clientY - drag.dy - o.top, o.height - pet.offsetHeight));
+    pet.style.left = x + 'px'; pet.style.top = y + 'px';
+  });
+  pet.addEventListener('pointerup', function () {
+    if (drag && !drag.moved) say('戳我肚子也没用～去点「模拟一轮对话」试试！');
+    drag = null;
+  });
+
+  // ---------- init ----------
+  drawWhale();
+  refresh();
+  setTimeout(function () { say('嗨！我是小深，这是在线演示～ 点点右边的按钮玩玩吧！'); }, 600);
+})();
+</script>
+</body>
+</html>
